@@ -39,6 +39,8 @@ sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/
 monerod Docker w/ public RPC (pruned):
 ```
 sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero sethsimmons/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
+```
+
 # Shoutout
 The base for the Dockerfile was pulled from:
 
