@@ -34,7 +34,7 @@ RUN useradd -ms /bin/bash monero && mkdir -p /home/monero/.bitmonero \
 USER monero
 
 WORKDIR /home/monero
-COPY --chown=monero:monero --from=build /monero/build/Linux/*/release/bin/* /usr/local/bin/
+COPY --chown=monero:monero --from=build /monero/build/Linux/*/release/bin/monerod /usr/local/bin/monerod
 
 RUN monerod --help
 
@@ -42,3 +42,4 @@ EXPOSE 18080
 EXPOSE 18089
 
 ENTRYPOINT ["monerod", "--non-interactive"]
+CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist"]
