@@ -36,8 +36,6 @@ USER monero
 WORKDIR /home/monero
 COPY --chown=monero:monero --from=build /monero/build/Linux/*/release/bin/monerod /usr/local/bin/monerod
 
-RUN monerod --help
-
 EXPOSE 18080
 EXPOSE 18089
 
