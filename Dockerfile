@@ -7,6 +7,7 @@ LABEL author="sethsimmons@pm.me" \
       maintainer="sethsimmons@pm.me"
 
 # Dependency list from https://github.com/monero-project/monero#compiling-monero-from-source
+# Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends build-essential cmake \
     pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev ca-certificates \
     libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev \
@@ -23,9 +24,9 @@ RUN cmake . && make && cp ./lib/libgtest*.a /usr/lib
 # Switch to Monero source directory
 WORKDIR /monero
 
-# Git pull Monero source and checkout specified tag/branch
+# Git pull Monero source at specified tag/branch
 ARG MONERO_BRANCH
-RUN git clone --recursive -b ${MONERO_BRANCH} \
+RUN git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && git submodule init && git submodule update
 
@@ -35,7 +36,7 @@ RUN make -j4 release-static
 # Select Ubuntu 20.04LTS for the image base
 FROM ubuntu:20.04
 
-# Upgrade image and install remaining dependencies
+# Install remaining dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y libnorm-dev libpgm-dev libgssapi-krb5-2 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
