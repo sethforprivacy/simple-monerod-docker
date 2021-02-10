@@ -43,7 +43,7 @@ sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/
 
 # Copyrights
 
-Code from this repository is released under MIT license. [Monero License](https://github.com/monero-project/monero/blob/master/LICENSE)
+Code from this repository is released under MIT license. [Monero License](https://github.com/monero-project/monero/blob/master/LICENSE), [@leonardochaia License](https://github.com/leonardochaia/docker-monerod/blob/master/LICENSE)
 
 # Credits
 The base for the Dockerfile was pulled from:
