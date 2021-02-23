@@ -1,11 +1,7 @@
 name: "Update Image"
 on:
-  # TODO: Remove faster schedule and pull_request once testing is completed.
-  schedule: # Schedled workflows only run once merged into main.
-    - cron: "*/5 * * * *" # Faster schedule for testing.
-    #- cron: "0 12 * * *" # Proposed schedule once testing has completed.
-  pull_request: # Here to ensure the workflow runs during testing. Will be removed once testing is completed.
-    types: [opened, reopened, synchronize]
+  schedule:
+    - cron: "0 12 * * *" # Run every day at noon.
 jobs:
   rebuild-container:
     name: "Rebuild Container"
@@ -24,8 +20,6 @@ jobs:
           registry: docker.pkg.github.com
           repository: ${{ github.repository }}/simple-monerod
           tags: latest
-          # TODO: Test that a release tag stays assigned to the rebuilt container when release tagged.
           tag_with_ref: true
-          # TODO: Evaluate if the following are necessary.
           add_git_labels: true
           tag_with_sha: true
