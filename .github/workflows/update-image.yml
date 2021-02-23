@@ -11,6 +11,11 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2"
 
+      # Get tag.
+      - name: "Get Tag"
+        id: get_tag
+        run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
+
       # Build and push the repo.
       - name: "Build and Push"
         uses: docker/build-push-action@v1
@@ -19,7 +24,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
           repository: ${{ github.repository }}/simple-monerod
-          tags: latest
+          tags: latest, ${{ steps.get_tag.outputs.tag }}
           tag_with_ref: true
           add_git_labels: true
           tag_with_sha: true
