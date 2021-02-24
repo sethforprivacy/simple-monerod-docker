@@ -25,6 +25,4 @@ jobs:
           registry: docker.pkg.github.com
           repository: ${{ github.repository }}/simple-monerod
           tags: latest, ${{ steps.get_tag.outputs.tag }}
-          tag_with_ref: true
           add_git_labels: true
-          tag_with_sha: true
