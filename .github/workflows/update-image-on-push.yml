@@ -38,10 +38,10 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/sethsimmons/simple-monerod:latest
-            ghcr.io/sethsimmons/simple-monerod:${{ steps.get_tag.outputs.tag }}
-            sethsimmons/simple-monerod:latest
-            sethsimmons/simple-monerod:${{ steps.get_tag.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/simple-monerod:latest
+            ghcr.io/${{ github.repository_owner }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
+            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
+            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
