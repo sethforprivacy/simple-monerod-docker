@@ -5,34 +5,44 @@ on:
   workflow_dispatch:
 jobs:
   rebuild-container:
-    name: "Rebuild Container"
+    name: "Rebuild Container with the latest base image"
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repo.
-      - name: "Checkout"
-        uses: "actions/checkout@v2"
-
-      # Get tag.
-      - name: "Get Monero Release Tag"
-        id: get_tag
-        run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
-
-      # Build and push the repo.
-      - name: "Build and Push Docker images to Github Packages"
-        uses: docker/build-push-action@v1
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to GitHub Packages Docker Registry
+        uses: docker/login-action@v1
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
-          repository: ${{ github.repository }}/simple-monerod
-          tags: latest, ${{ steps.get_tag.outputs.tag }}
-          add_git_labels: true
-      
-      - name: "Build and push Docker images to Docker Hub"
-        uses: docker/build-push-action@v1
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1 
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: sethsimmons/simple-monerod
-          tags: latest, ${{ steps.get_tag.outputs.tag }}
-          add_git_labels: true
+      - 
+        name: "Get Monero Release Tag"
+        id: get_tag
+        run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
+      -
+        name: Build and push to Docker Hub and Github Packages Docker Registry
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: |
+            docker.pkg.github.com:latest
+            docker.pkg.github.com:${{ steps.get_tag.outputs.tag }}
+            sethsimmons/simple-monerod:latest
+            sethsimmons/simple-monerod:${{ steps.get_tag.outputs.tag }}
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
