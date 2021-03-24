@@ -1,7 +1,6 @@
-name: "Update Image and Push to Github Packages and Docker Hub"
-on:
-  schedule:
-    - cron: "0 12 * * *" # Run every day at noon.
+name: "Update Image and Push to Github Packages and Docker Hub when commits are pushed to this repo"
+# Run this workflow every time a new commit pushed to your repository
+on: push
 jobs:
   rebuild-container:
     name: "Rebuild Container"
