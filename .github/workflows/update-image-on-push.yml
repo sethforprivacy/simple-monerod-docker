@@ -46,7 +46,7 @@ jobs:
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=registry,ref=sethsimmons/simple-monerod:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
           cache-to: type=inline
       -
         name: Image digest
