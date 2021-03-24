@@ -1,6 +1,9 @@
-name: "Update Image and Push to Github Packages and Docker Hub when commits are pushed to this repo"
+name: "Update Image and Push to Github Packages and Docker Hub when Dockerfile is changed"
 # Run this workflow every time a new commit pushed to your repository
-on: push
+on:
+  push:
+    paths:
+    - 'Dockerfile'
 jobs:
   rebuild-container:
     name: "Rebuild Container"
