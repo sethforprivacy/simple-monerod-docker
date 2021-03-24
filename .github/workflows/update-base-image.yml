@@ -31,6 +31,9 @@ jobs:
         name: "Get Monero Release Tag"
         id: get_tag
         run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
+      - 
+        name: "Echo Monero Release Tag"
+        run: echo "$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
       -
         name: Build and push to Docker Hub and Github Packages Docker Registry
         id: docker_build
