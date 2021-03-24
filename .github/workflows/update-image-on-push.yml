@@ -46,8 +46,8 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/sethsimmons/simple-monerod-docker/simple-monerod:latest
-            ghcr.io/sethsimmons/simple-monerod-docker/simple-monerod:${{ steps.get_tag.outputs.tag }}
+            ghcr.io/sethsimmons/simple-monerod:latest
+            ghcr.io/sethsimmons/simple-monerod:${{ steps.get_tag.outputs.tag }}
             sethsimmons/simple-monerod:latest
             sethsimmons/simple-monerod:${{ steps.get_tag.outputs.tag }}
           cache-from: type=local,src=/tmp/.buildx-cache
