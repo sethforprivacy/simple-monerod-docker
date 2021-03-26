@@ -53,8 +53,7 @@ jobs:
         uses: Azure/container-scan@v0
         with:
           image-name: ${{ secrets.DOCKER_USERNAME }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
-          run-quality-checks: true
-          severity-threshold: MEDIUM
+          severity-threshold: HIGH
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
