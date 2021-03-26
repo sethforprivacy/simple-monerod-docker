@@ -47,6 +47,13 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
           cache-to: type=inline
+      - 
+        name: Scan new image and output results
+        uses: Azure/container-scan@v0
+        with:
+          image-name: ${{ secrets.DOCKER_USERNAME }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
+          run-quality-checks: true
+          severity-threshold: MEDIUM
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
