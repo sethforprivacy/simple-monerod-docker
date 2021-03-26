@@ -2,4 +2,3 @@ general:
   vulnerabilities:
     - CIS-DI-0005
     - CIS-DI-0008
-  bestPracticeViolations:
