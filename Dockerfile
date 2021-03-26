@@ -37,7 +37,7 @@ RUN make -j4 release-static
 FROM ubuntu:20.04
 
 # Install remaining dependencies
-RUN apt-get update && apt-get install --no-install-recommends -y libnorm-dev libpgm-dev libgssapi-krb5-2 \
+RUN apt-get update && apt-get install --no-install-recommends -y curl libnorm-dev libpgm-dev libgssapi-krb5-2 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -53,6 +53,9 @@ COPY --chown=monero:monero --from=build /monero/build/Linux/*/release/bin/monero
 # Expose p2p and restricted RPC ports
 EXPOSE 18080
 EXPOSE 18089
+
+# Add HEALTHCHECK against get_info endpoint
+HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:18089/get_info || exit 1
 
 # Start monerod with required --non-interactive flag and sane defaults that are overridden by user input (if applicable)
 ENTRYPOINT ["monerod", "--non-interactive"]
