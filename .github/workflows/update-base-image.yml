@@ -1,7 +1,7 @@
-name: "Update Image and Push to Github Packages and Docker Hub Daily"
+name: "Update image and push to Github Packages and Docker Hub weekly"
 on:
   schedule:
-    - cron: "0 12 * * *" # Run every day at noon.
+    - cron: "0 12 * * 1" # Run every Monday at noon.
   workflow_dispatch:
 jobs:
   rebuild-container:
