@@ -1,5 +1,5 @@
 # From https://github.com/leonardochaia/docker-monerod/blob/master/src/Dockerfile
-ARG MONERO_BRANCH=v0.17.1.9
+ARG MONERO_BRANCH=v0.17.2.0
 
 # Select Ubuntu 20.04LTS for the build image base
 FROM ubuntu:20.04 as build
