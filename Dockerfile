@@ -17,9 +17,16 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install --no-ins
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+ENV CFLAGS='-fPIC'
+ENV CXXFLAGS='-fPIC'
+ENV USE_SINGLE_BUILDDIR 1
+ENV BOOST_DEBUG         1
+
 # Switch to directory for gtest and make/install libs
 WORKDIR /usr/src/gtest
-RUN cmake . && make && cp ./lib/libgtest*.a /usr/lib
+RUN cmake . \
+    && make \
+    && cp ./lib/libgtest*.a /usr/lib
 
 # Switch to Monero source directory
 WORKDIR /monero
@@ -31,7 +38,9 @@ RUN git clone --recursive --branch ${MONERO_BRANCH} \
     && git submodule init && git submodule update
 
 # Make static Monero binaries
-RUN make -j4 release-static
+ARG NPROC
+RUN test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc
+RUN make -j"$(cat /nproc)" release-static
 
 # Select Ubuntu 20.04LTS for the image base
 FROM ubuntu:20.04
@@ -42,13 +51,14 @@ RUN apt-get update && apt-get install --no-install-recommends -y curl libnorm-de
     && rm -rf /var/lib/apt/lists/*
 
 # Add user and setup directories for monerod
-RUN useradd -ms /bin/bash monero && mkdir -p /home/monero/.bitmonero \
+RUN useradd -ms /bin/bash monero \
+    && mkdir -p /home/monero/.bitmonero \
     && chown -R monero:monero /home/monero/.bitmonero
 USER monero
 
 # Switch to home directory and install newly built monerod binary
 WORKDIR /home/monero
-COPY --chown=monero:monero --from=build /monero/build/Linux/*/release/bin/monerod /usr/local/bin/monerod
+COPY --chown=monero:monero --from=build /monero/build/release/bin/monerod /usr/local/bin/monerod
 
 # Expose p2p and restricted RPC ports
 EXPOSE 18080
