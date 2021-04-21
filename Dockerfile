@@ -39,8 +39,7 @@ RUN git clone --recursive --branch ${MONERO_BRANCH} \
 
 # Make static Monero binaries
 ARG NPROC
-RUN test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc
-RUN make -j"$(cat /nproc)" release-static
+RUN test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)" release-static
 
 # Select Ubuntu 20.04LTS for the image base
 FROM ubuntu:20.04
