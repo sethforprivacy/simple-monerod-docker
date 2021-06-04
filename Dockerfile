@@ -8,7 +8,9 @@ LABEL author="sethsimmons@pm.me" \
 
 # Dependency list from https://github.com/monero-project/monero#compiling-monero-from-source
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends build-essential cmake \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends build-essential cmake \
     pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev ca-certificates \
     libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev \
     libexpat1-dev doxygen graphviz libpgm-dev qttools5-dev-tools libhidapi-dev \
@@ -45,7 +47,9 @@ RUN test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$
 FROM ubuntu:20.04
 
 # Install remaining dependencies
-RUN apt-get update && apt-get install --no-install-recommends -y curl libnorm-dev libpgm-dev libgssapi-krb5-2 \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install --no-install-recommends -y curl libnorm-dev libpgm-dev libgssapi-krb5-2 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
