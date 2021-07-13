@@ -1,4 +1,4 @@
-name: build
+name: Build and scan container for vulnerabilities with Trivy
 
 on:
   push:
