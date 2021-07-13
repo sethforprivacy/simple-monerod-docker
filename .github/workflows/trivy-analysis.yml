@@ -2,10 +2,11 @@ name: Build and scan container for vulnerabilities with Trivy
 
 on:
   push:
-    branches: [ main ]
+    paths:
+    - 'Dockerfile'
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ main ]
+    paths:
+    - 'Dockerfile'
   schedule:
     - cron: '22 14 * * 0'
 
