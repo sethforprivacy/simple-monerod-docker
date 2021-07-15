@@ -2,7 +2,7 @@
 A simple and straightforward Dockerized monerod built from source and exposing standard ports.
 
 [![Weekly Update Rebuild](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-base-image.yml/badge.svg)](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-base-image.yml) 
-[![Latest Dockerfile build](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-image-on-push.yml/badge.svg)](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-image-on-push.yml)
+[![Latest Dockerfile build](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-image-on-push.yml/badge.svg)](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-image-on-push.yml)  
 [![Container security scan with Trivy](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/trivy-analysis.yml/badge.svg)](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/trivy-analysis.yml)
 
 # Docker Hub
