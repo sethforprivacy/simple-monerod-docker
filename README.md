@@ -28,7 +28,7 @@ I will always release the latest Monero version under the `latest` tag as well a
 
 I am using this container for my guide on running a Monero node:
 
-https://sethsimmons.me/guides/run-a-monero-node/
+https://sethforprivacy.com/guides/run-a-monero-node/
 
 The ways I would generally recommend running this container for a personal or public Monero node are below.
 
