@@ -29,7 +29,7 @@ services:
     volumes:
         - tor-keys:/var/lib/tor/hidden_service/
 
-autoheal:
+  autoheal:
     image: willfarrell/autoheal:latest
     container_name: autoheal
     restart: unless-stopped
@@ -38,13 +38,13 @@ autoheal:
     volumes:
         - "/var/run/docker.sock:/var/run/docker.sock"
 
-watchtower:
+  watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
     restart: unless-stopped
     volumes:
         - "/var/run/docker.sock:/var/run/docker.sock"
 
-volumes:
+  volumes:
     bitmonero:
     tor-keys:
