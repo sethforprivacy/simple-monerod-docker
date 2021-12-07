@@ -2,8 +2,8 @@
 ARG MONERO_BRANCH=v0.17.3.0
 ARG MONERO_COMMIT_HASH=ab18fea3500841fc312630d49ed6840b3aedb34d
 
-# Select Alpine 3.13 for the build image base
-FROM alpine:3.13 as build
+# Select Alpine 3.15 for the build image base
+FROM alpine:3.15 as build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -95,11 +95,12 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
 ARG NPROC
 RUN set -ex && test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)" release-static-linux-x86_64
 
-# Select Alpine 3.13 for the image base
-FROM alpine:3.13
+# Select Alpine 3.15 for the image base
+FROM alpine:3.15
 
 # Install remaining dependencies
 RUN set -ex && apk --update --no-cache upgrade && apk add --update --no-cache \
+    curl \
     ca-certificates \
     libexecinfo \
     libsodium \
