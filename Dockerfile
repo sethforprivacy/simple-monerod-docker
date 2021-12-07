@@ -1,5 +1,10 @@
-# From https://github.com/leonardochaia/docker-monerod/blob/master/src/Dockerfile
+# Initial base from https://github.com/leonardochaia/docker-monerod/blob/master/src/Dockerfile
+# Alpine specifics from https://github.com/cornfeedhobo/docker-monero/blob/f96711415f97af1fc9364977d1f5f5ecd313aad0/Dockerfile
+
+# Set Monero branch or tag to build
 ARG MONERO_BRANCH=v0.17.3.0
+
+# Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
 ARG MONERO_COMMIT_HASH=ab18fea3500841fc312630d49ed6840b3aedb34d
 
 # Select Alpine 3.15 for the build image base
@@ -7,7 +12,11 @@ FROM alpine:3.15 as build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
-RUN set -ex && apk --update --no-cache upgrade && apk add --update --no-cache \
+# Upgrade base image
+RUN set -ex && apk --update --no-cache upgrade
+
+# Install all dependencies for a static build
+RUN set -ex && apk add --update --no-cache \
     autoconf \
     automake \
     boost \
@@ -74,6 +83,7 @@ RUN set -ex && apk --update --no-cache upgrade && apk add --update --no-cache \
     unbound-dev \
     zeromq-dev
 
+# Set necessary args and environment variables for building Monero
 ARG NPROC
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC -DELPP_FEATURE_CRASH_LOG'
@@ -98,8 +108,11 @@ RUN set -ex && test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc &
 # Select Alpine 3.15 for the image base
 FROM alpine:3.15
 
-# Install remaining dependencies
-RUN set -ex && apk --update --no-cache upgrade && apk add --update --no-cache \
+# Upgrade base image
+RUN set -ex && apk --update --no-cache upgrade
+
+# Install all dependencies for static binaries + curl for healthcheck
+RUN set -ex && apk add --update --no-cache \
     curl \
     ca-certificates \
     libexecinfo \
