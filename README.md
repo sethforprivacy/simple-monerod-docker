@@ -1,4 +1,5 @@
-# simple-monerod-docker
+# Simple Monerod Docker
+
 A simple and straightforward Dockerized monerod built from source and exposing standard ports.
 
 ## Actions
@@ -13,18 +14,19 @@ A simple and straightforward Dockerized monerod built from source and exposing s
 ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/sethsimmons/simple-monerod)  
 ![Docker Image Version (latest by date)](https://img.shields.io/docker/v/sethsimmons/simple-monerod)  
 
-# Docker Hub
+## Docker Hub
+
 This repo is used to build the images available at:
 
 https://hub.docker.com/r/sethsimmons/simple-monerod
 
-# Tags
+## Tags
 I will always release the latest Monero version under the `latest` tag as well as the version number tag (i.e. `v0.17.1.9`).
 
 `latest`: The latest tagged version of Monero from https://github.com/monero-project/monero/tags  
 `vx.xx.x.x`: The version corresponding with the tagged version from https://github.com/monero-project/monero/tags
 
-# Recommended usage
+## Recommended usage
 
 I am using this container for my guide on running a Monero node:
 
@@ -53,11 +55,16 @@ monerod Docker w/ public RPC (pruned):
 sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero sethsimmons/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
 ```
 
-# Copyrights
+## Copyrights
 
 Code from this repository is released under MIT license. [Monero License](https://github.com/monero-project/monero/blob/master/LICENSE), [@leonardochaia License](https://github.com/leonardochaia/docker-monerod/blob/master/LICENSE)
 
-# Credits
+## Credits
+
 The base for the Dockerfile was pulled from:
 
 https://github.com/leonardochaia/docker-monerod
+
+The migration to Alpine from a Ubuntu 20.04 base image was based largely on previous commits from:
+
+https://github.com/cornfeedhobo/docker-monero
