@@ -25,14 +25,12 @@ jobs:
         uses: docker/build-push-action@v2.7.0
         with:
           push: false
-          tags: ${{ github.repository_owner }}/simple-monerod:alpine-test
-          outputs: type=image,name=${{ github.repository_owner }}/simple-monerod:alpine-test
+          tags: simple-monerod:alpine-test
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:alpine
-          cache-to: type=inline
       - name: Test image (basic)
         uses: addnab/docker-run-action@v3
         with:
-          image: ${{ github.repository_owner }}/simple-monerod:alpine-test
+          image: simple-monerod:alpine-test
           run: monerod --version
       -
         name: Image digest
