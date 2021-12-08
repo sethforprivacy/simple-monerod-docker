@@ -1,11 +1,11 @@
-name: "Update image when Dockerfile is changed"
+name: "Update Ubuntu when Dockerfile.Ubuntu is changed"
 # Run this workflow every time a new commit pushed to your repository
 on:
   push:
     branches:
     - main
     paths:
-    - 'Dockerfile'
+    - 'Dockerfile.Ubuntu'
 jobs:
   rebuild-container:
     name: "Rebuild Container with the latest base image"
@@ -29,34 +29,27 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: "Checkout repository"
         uses: "actions/checkout@v2.3.4"
-      - 
-        name: "Get Monero Release Tag"
-        id: get_tag
-        run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
       -
         name: Build and push to Docker Hub and Github Packages Docker Registry
         id: docker_build
         uses: docker/build-push-action@v2.7.0
         with:
           push: true
+          file: ./Dockerfile.Ubuntu
           tags: |
-            ghcr.io/${{ github.repository_owner }}/simple-monerod:latest
-            ghcr.io/${{ github.repository_owner }}/simple-monerod:alpine
-            ghcr.io/${{ github.repository_owner }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
-            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
-            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:alpine
-            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/simple-monerod:ubuntu
+            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
           cache-to: type=inline
       - 
         name: Scan new image and output results
         uses: Azure/container-scan@v0
         with:
-          image-name: ${{ secrets.DOCKER_USERNAME }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
+          image-name: ${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
           severity-threshold: HIGH
       -
         name: Image digest

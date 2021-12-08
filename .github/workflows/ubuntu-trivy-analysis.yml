@@ -3,10 +3,10 @@ name: Build and scan container for vulnerabilities with Trivy
 on:
   push:
     paths:
-    - 'Dockerfile'
+    - 'Dockerfile.Ubuntu'
   pull_request:
     paths:
-    - 'Dockerfile'
+    - 'Dockerfile.Ubuntu'
   schedule:
     - cron: '22 14 * * 0'
 
@@ -20,12 +20,12 @@ jobs:
 
       - name: Build Alpine image from Dockerfile
         run: |
-          docker build -f Dockerfile -t sethforprivacy/simple-monerod:alpine .
+          docker build -f Dockerfile.Ubuntu -t sethforprivacy/simple-monerod:ubuntu .
 
       - name: Run Trivy vulnerability scanner against Alpine image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'sethforprivacy/simple-monerod:alpine'
+          image-ref: 'sethforprivacy/simple-monerod:ubuntu'
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'

@@ -1,60 +1,131 @@
-# From https://github.com/leonardochaia/docker-monerod/blob/master/src/Dockerfile
+# Initial base from https://github.com/leonardochaia/docker-monerod/blob/master/src/Dockerfile
+# Alpine specifics from https://github.com/cornfeedhobo/docker-monero/blob/f96711415f97af1fc9364977d1f5f5ecd313aad0/Dockerfile
+
+# Set Monero branch or tag to build
 ARG MONERO_BRANCH=v0.17.3.0
 
-# Select Ubuntu 20.04LTS for the build image base
-FROM ubuntu:20.04 as build
-LABEL author="sethsimmons@pm.me" \
-      maintainer="sethsimmons@pm.me"
+# Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
+ARG MONERO_COMMIT_HASH=ab18fea3500841fc312630d49ed6840b3aedb34d
 
-# Dependency list from https://github.com/monero-project/monero#compiling-monero-from-source
-# Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends build-essential cmake \
-    pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev ca-certificates \
-    libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev \
-    libexpat1-dev doxygen graphviz libpgm-dev qttools5-dev-tools libhidapi-dev \
-    libusb-dev libprotobuf-dev protobuf-compiler libgtest-dev git \
-    libnorm-dev libpgm-dev libusb-1.0-0-dev libudev-dev libgssapi-krb5-2 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Select Alpine 3.15 for the build image base
+FROM alpine:3.15 as build
+LABEL author="seth@sethforprivacy.com" \
+      maintainer="seth@sethforprivacy.com"
 
+# Upgrade base image
+RUN set -ex && apk --update --no-cache upgrade
+
+# Install all dependencies for a static build
+RUN set -ex && apk add --update --no-cache \
+    autoconf \
+    automake \
+    boost \
+    boost-atomic \
+    boost-build \
+    boost-build-doc \
+    boost-chrono \
+    boost-container \
+    boost-context \
+    boost-contract \
+    boost-coroutine \
+    boost-date_time \
+    boost-dev \
+    boost-doc \
+    boost-fiber \
+    boost-filesystem \
+    boost-graph \
+    boost-iostreams \
+    boost-libs \
+    boost-locale \
+    boost-log \
+    boost-log_setup \
+    boost-math \
+    boost-prg_exec_monitor \
+    boost-program_options \
+    boost-python3 \
+    boost-random \
+    boost-regex \
+    boost-serialization \
+    boost-stacktrace_basic \
+    boost-stacktrace_noop \
+    boost-static \
+    boost-system \
+    boost-thread \
+    boost-timer \
+    boost-type_erasure \
+    boost-unit_test_framework \
+    boost-wave \
+    boost-wserialization \
+    ca-certificates \
+    cmake \
+    curl \
+    dev86 \
+    doxygen \
+    eudev-dev \
+    file \
+    g++ \
+    git \
+    graphviz \
+    libexecinfo-dev \
+    libsodium-dev \
+    libtool \
+    libusb-dev \
+    linux-headers \
+    make \
+    miniupnpc-dev \
+    ncurses-dev \
+    openssl-dev \
+    pcsc-lite-dev \
+    pkgconf \
+    protobuf-dev \
+    rapidjson-dev \
+    readline-dev \
+    unbound-dev \
+    zeromq-dev
+
+# Set necessary args and environment variables for building Monero
+ARG MONERO_BRANCH
+ARG MONERO_COMMIT_HASH
+ARG NPROC
 ENV CFLAGS='-fPIC'
-ENV CXXFLAGS='-fPIC'
+ENV CXXFLAGS='-fPIC -DELPP_FEATURE_CRASH_LOG'
 ENV USE_SINGLE_BUILDDIR 1
 ENV BOOST_DEBUG         1
-
-# Switch to directory for gtest and make/install libs
-WORKDIR /usr/src/gtest
-RUN cmake . \
-    && make \
-    && cp ./lib/libgtest*.a /usr/lib
 
 # Switch to Monero source directory
 WORKDIR /monero
 
-# Git pull Monero source at specified tag/branch
-ARG MONERO_BRANCH
-RUN git clone --recursive --branch ${MONERO_BRANCH} \
+# Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
+RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
-    && git submodule init && git submodule update
+    && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
+    && git submodule init && git submodule update \
+    && mkdir -p build/release && cd build/release \
+    # Create make build files manually for release-static-linux-x86_64
+    && cmake -D STATIC=ON -D ARCH="x86-64" -D BUILD_64=ON -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-x64" ../.. \
+    # Build only monerod binary using number of available threads
+    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
-# Make static Monero binaries
-ARG NPROC
-RUN test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)" release-static
+# Begin final image build
+# Select Alpine 3.15 for the image base
+FROM alpine:3.15
 
-# Select Ubuntu 20.04LTS for the image base
-FROM ubuntu:20.04
+# Upgrade base image
+RUN set -ex && apk --update --no-cache upgrade
 
-# Install remaining dependencies
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install --no-install-recommends -y curl libnorm-dev libpgm-dev libgssapi-krb5-2 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install all dependencies for static binaries + curl for healthcheck
+RUN set -ex && apk add --update --no-cache \
+    curl \
+    ca-certificates \
+    libexecinfo \
+    libsodium \
+    ncurses-libs \
+    pcsc-lite-libs \
+    readline \
+    zeromq
 
 # Add user and setup directories for monerod
-RUN useradd -ms /bin/bash monero \
+RUN set -ex && adduser -Ds /bin/bash monero \
     && mkdir -p /home/monero/.bitmonero \
     && chown -R monero:monero /home/monero/.bitmonero
 USER monero
@@ -63,8 +134,10 @@ USER monero
 WORKDIR /home/monero
 COPY --chown=monero:monero --from=build /monero/build/release/bin/monerod /usr/local/bin/monerod
 
-# Expose p2p and restricted RPC ports
+# Expose p2p port
 EXPOSE 18080
+
+# Expose restricted RPC port
 EXPOSE 18089
 
 # Add HEALTHCHECK against get_info endpoint
