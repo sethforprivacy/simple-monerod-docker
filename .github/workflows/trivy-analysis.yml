@@ -4,34 +4,54 @@ on:
   push:
     paths:
     - 'Dockerfile'
+    - 'Dockerfile.Ubuntu'
   pull_request:
     paths:
     - 'Dockerfile'
+    - 'Dockerfile.Ubuntu'
   schedule:
     - cron: '22 14 * * 0'
 
 jobs:
   build:
-    name: Build
-    runs-on: "ubuntu-18.04"
+    name: Build and scan images
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Build an image from Dockerfile
+      - name: Build Alpine image from Dockerfile
         run: |
-          docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
+          docker build -f Dockerfile -t sethforprivacy/simple-monerod:alpine .
+      
+      - name: Build Ubuntu image from Dockerfile
+        run: |
+          docker build -f Dockerfile.Ubuntu -t sethforprivacy/simple-monerod:ubuntu .
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner against Alpine image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+          image-ref: 'sethforprivacy/simple-monerod:alpine'
           format: 'template'
           template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
+          output: 'trivy-results-alpine.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: Upload Trivy scan results to GitHub Security tab
+      - name: Run Trivy vulnerability scanner against Ubuntu image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sethforprivacy/simple-monerod:ubuntu'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results-ubuntu.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Alpine Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v1
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: 'trivy-results-alpine.sarif'
+
+      - name: Upload Ubuntu Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: 'trivy-results-ubuntu.sarif'
