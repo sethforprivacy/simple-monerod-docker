@@ -2,6 +2,8 @@ name: "Update Ubuntu when Dockerfile.Ubuntu is changed"
 # Run this workflow every time a new commit pushed to your repository
 on:
   push:
+    branches:
+    - main
     paths:
     - 'Dockerfile.Ubuntu'
 jobs:
