@@ -84,6 +84,8 @@ RUN set -ex && apk add --update --no-cache \
     zeromq-dev
 
 # Set necessary args and environment variables for building Monero
+ARG MONERO_BRANCH
+ARG MONERO_COMMIT_HASH
 ARG NPROC
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC -DELPP_FEATURE_CRASH_LOG'
@@ -93,15 +95,18 @@ ENV BOOST_DEBUG         1
 # Switch to Monero source directory
 WORKDIR /monero
 
-# Git pull Monero source at specified tag/branch
-ARG MONERO_BRANCH
-ARG MONERO_COMMIT_HASH
+# Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
 RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
     && git submodule init && git submodule update \
-    && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} release-static-linux-x86_64
+    && mkdir -p build/release && cd build/release \
+    # Create make build files manually for release-static-linux-x86_64
+    && cmake -D STATIC=ON -D ARCH="x86-64" -D BUILD_64=ON -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-x64" ../.. \
+    # Build only monerod binary using number of available threads
+    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
+# Begin final image build
 # Select Alpine 3.15 for the image base
 FROM alpine:3.15
 
@@ -129,8 +134,10 @@ USER monero
 WORKDIR /home/monero
 COPY --chown=monero:monero --from=build /monero/build/release/bin/monerod /usr/local/bin/monerod
 
-# Expose p2p and restricted RPC ports
+# Expose p2p port
 EXPOSE 18080
+
+# Expose restricted RPC port
 EXPOSE 18089
 
 # Add HEALTHCHECK against get_info endpoint
