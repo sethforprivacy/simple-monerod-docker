@@ -99,11 +99,8 @@ ARG MONERO_COMMIT_HASH
 RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
-    && git submodule init && git submodule update
-
-# Make static Monero binaries
-ARG NPROC
-RUN set -ex && test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)" release-static-linux-x86_64
+    && git submodule init && git submodule update \
+    && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} release-static-linux-x86_64
 
 # Select Alpine 3.15 for the image base
 FROM alpine:3.15

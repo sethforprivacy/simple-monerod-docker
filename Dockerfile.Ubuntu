@@ -19,6 +19,8 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Set necessary args and environment variables for building Monero
+ARG NPROC
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC'
 ENV USE_SINGLE_BUILDDIR 1
@@ -34,14 +36,12 @@ RUN cmake . \
 WORKDIR /monero
 
 # Git pull Monero source at specified tag/branch
+# Make static Monero binaries
 ARG MONERO_BRANCH
 RUN git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
-    && git submodule init && git submodule update
-
-# Make static Monero binaries
-ARG NPROC
-RUN test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)" release-static
+    && git submodule init && git submodule update \
+    && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} release-static
 
 # Select Ubuntu 20.04LTS for the image base
 FROM ubuntu:20.04
