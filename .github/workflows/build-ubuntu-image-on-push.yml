@@ -26,13 +26,7 @@ jobs:
         with:
           push: false
           tags: simple-monerod:ubuntu-test
-          outputs: type=image
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
-      - name: Test image (basic)
-        uses: addnab/docker-run-action@v3
-        with:
-          image: simple-monerod:ubuntu-test
-          run: monerod --version
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

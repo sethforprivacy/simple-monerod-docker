@@ -26,13 +26,7 @@ jobs:
         with:
           push: false
           tags: simple-monerod:alpine-test
-          outputs: type=image
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:alpine
-      - name: Test image (basic)
-        uses: addnab/docker-run-action@v3
-        with:
-          image: simple-monerod:alpine-test
-          run: monerod --version
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
