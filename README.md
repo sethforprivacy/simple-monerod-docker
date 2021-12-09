@@ -4,14 +4,15 @@ A simple and straightforward Dockerized monerod built from source and exposing s
 
 ## Actions
 
-[![Weekly Update Rebuild](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-base-image.yml/badge.svg)](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-base-image.yml)  
-[![Latest Dockerfile build](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-image-on-push.yml/badge.svg)](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/update-image-on-push.yml)  
-[![Container security scan with Trivy](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/trivy-analysis.yml/badge.svg)](https://github.com/sethsimmons/simple-monerod-docker/actions/workflows/trivy-analysis.yml)
+[![Weekly Alpine Update Rebuild](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml)  
+[![Weekly Ubuntu Update Rebuild](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-ubuntu-base-image.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-ubuntu-base-image.yml)  
+[![Latest Alpine Dockerfile build on push](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml)  
+[![Latest Ubuntu Dockerfile build on push](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-ubuntu-image-on-push.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-ubuntu-image-on-push.yml)  
 
 ## Docker
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/sethsimmons/simple-monerod)  
-![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/sethsimmons/simple-monerod)  
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/sethsimmons/simple-monerod/latest)  
 ![Docker Image Version (latest by date)](https://img.shields.io/docker/v/sethsimmons/simple-monerod)  
 
 ## Docker Hub
