@@ -25,7 +25,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: "Checkout repository"
-        uses: "actions/checkout@v2.4.0"
+        uses: "actions/checkout@v3"
       - 
         name: "Get Monero Release Tag"
         id: get_tag
