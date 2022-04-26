@@ -40,12 +40,6 @@ jobs:
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
-      - 
-        name: Scan new image and output results
-        uses: Azure/container-scan@v0
-        with:
-          image-name: ${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
-          severity-threshold: HIGH
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
