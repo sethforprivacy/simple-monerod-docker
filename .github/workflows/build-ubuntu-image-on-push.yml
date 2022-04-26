@@ -2,12 +2,12 @@ name: "Test build of Ubuntu image when Dockerfile is changed"
 on:
   push:
     paths:
-    - 'Dockerfile.Ubuntu'
+    - 'ubuntu.Dockerfile'
     branches-ignore:
     - main
   pull_request:
     paths:
-    - 'Dockerfile.Ubuntu'
+    - 'ubuntu.Dockerfile'
   workflow_dispatch:
 jobs:
   rebuild-container:
