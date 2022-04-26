@@ -24,6 +24,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Set necessary args and environment variables for building Monero
+ARG MONERO_BRANCH
+ARG MONERO_COMMIT_HASH
 ARG NPROC
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC'
@@ -35,7 +37,6 @@ WORKDIR /monero
 
 # Git pull Monero source at specified tag/branch
 # Make static Monero binaries
-ARG MONERO_BRANCH
 RUN git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
