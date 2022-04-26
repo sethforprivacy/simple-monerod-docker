@@ -1,5 +1,9 @@
 # From https://github.com/leonardochaia/docker-monerod/blob/master/src/Dockerfile
-ARG MONERO_BRANCH=v0.17.3.0
+# Set Monero branch or tag to build
+ARG MONERO_BRANCH=v0.17.3.2
+
+# Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
+ARG MONERO_COMMIT_HASH=67e5ca9ad6f1c861ad315476a88f9d36c38a0abb
 
 # Select Ubuntu 20.04LTS for the build image base
 FROM ubuntu:20.04 as build
@@ -34,6 +38,7 @@ WORKDIR /monero
 ARG MONERO_BRANCH
 RUN git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
+    && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
     && git submodule init && git submodule update \
     && mkdir -p build/release && cd build/release \
     # Create make build files manually for release-static-linux-x86_64
