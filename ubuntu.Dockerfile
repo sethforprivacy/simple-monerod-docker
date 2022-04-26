@@ -3,7 +3,7 @@
 ARG MONERO_BRANCH=v0.17.3.2
 
 # Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
-ARG MONERO_COMMIT_HASH=67e5ca9ad6f1c861ad315476a88f9d36c38a0abb
+ARG MONERO_COMMIT_HASH=424e4de16b98506170db7b0d7d87a79ccf541744
 
 # Select Ubuntu 20.04LTS for the build image base
 FROM ubuntu:20.04 as build
