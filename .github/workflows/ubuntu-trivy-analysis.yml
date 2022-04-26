@@ -3,10 +3,10 @@ name: Build and scan container for vulnerabilities with Trivy
 on:
   push:
     paths:
-    - 'Dockerfile.Ubuntu'
+    - 'ubuntu.Dockerfile'
   pull_request:
     paths:
-    - 'Dockerfile.Ubuntu'
+    - 'ubuntu.Dockerfile'
   schedule:
     - cron: '22 14 * * 0'
 
@@ -20,7 +20,7 @@ jobs:
 
       - name: Build Alpine image from Dockerfile
         run: |
-          docker build -f Dockerfile.Ubuntu -t sethforprivacy/simple-monerod:ubuntu .
+          docker build -f ubuntu.Dockerfile -t sethforprivacy/simple-monerod:ubuntu .
 
       - name: Run Trivy vulnerability scanner against Alpine image
         uses: aquasecurity/trivy-action@master
