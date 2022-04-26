@@ -1,11 +1,11 @@
-name: "Update Ubuntu when Dockerfile.Ubuntu is changed"
+name: "Update Ubuntu when ubuntu.Dockerfile is changed"
 # Run this workflow every time a new commit pushed to your repository
 on:
   push:
     branches:
     - main
     paths:
-    - 'Dockerfile.Ubuntu'
+    - 'ubuntu.Dockerfile'
 jobs:
   rebuild-container:
     name: "Rebuild Container with the latest base image"
@@ -35,7 +35,7 @@ jobs:
         uses: docker/build-push-action@v2.10.0
         with:
           push: true
-          file: ./Dockerfile.Ubuntu
+          file: ./ubuntu.Dockerfile
           tags: |
             ghcr.io/${{ github.repository_owner }}/simple-monerod:ubuntu
             ${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
