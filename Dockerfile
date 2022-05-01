@@ -2,10 +2,10 @@
 # Alpine specifics from https://github.com/cornfeedhobo/docker-monero/blob/f96711415f97af1fc9364977d1f5f5ecd313aad0/Dockerfile
 
 # Set Monero branch or tag to build
-ARG MONERO_BRANCH=v0.17.3.0
+ARG MONERO_BRANCH=v0.17.3.2
 
 # Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
-ARG MONERO_COMMIT_HASH=ab18fea3500841fc312630d49ed6840b3aedb34d
+ARG MONERO_COMMIT_HASH=424e4de16b98506170db7b0d7d87a79ccf541744
 
 # Select Alpine 3.15 for the build image base
 FROM alpine:3.15 as build
