@@ -31,7 +31,6 @@ jobs:
           push: false
           platforms: linux/amd64,linux/arm64,linux/arm
           tags: simple-monerod:alpine-test
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:alpine
       - 
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
