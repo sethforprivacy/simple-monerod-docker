@@ -12,9 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - 
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v2.0.0
-      - 
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
       - 
@@ -31,10 +28,10 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - 
-        name: "Checkout repository"
-        uses: "actions/checkout@v3"
+        name: Checkout repository
+        uses: actions/checkout@v3
       - 
-        name: "Get Monero Release Tag"
+        name: Get Monero Release Tag
         id: get_tag
         run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
       - 
