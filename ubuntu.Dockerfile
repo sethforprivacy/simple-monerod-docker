@@ -6,7 +6,7 @@ ARG MONERO_BRANCH=v0.17.3.2
 ARG MONERO_COMMIT_HASH=424e4de16b98506170db7b0d7d87a79ccf541744
 
 # Select Ubuntu 20.04LTS for the build image base
-FROM ubuntu:20.04 as build
+FROM --platform=$BUILDPLATFORM ubuntu:20.04 as build
 LABEL author="sethsimmons@pm.me" \
       maintainer="sethsimmons@pm.me"
 
@@ -42,13 +42,11 @@ RUN git clone --recursive --branch ${MONERO_BRANCH} \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
     && git submodule init && git submodule update \
     && mkdir -p build/release && cd build/release \
-    # Create make build files manually for release-static-linux-x86_64
-    && cmake -D STATIC=ON -D ARCH="x86-64" -D BUILD_64=ON -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-x64" ../.. \
-    # Build only monerod binary using number of available threads
-    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
+    && cmake -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-x64" ../.. \
+    && cd /monero && nice -n 19 ionice -c2 -n7 make -d -j${NPROC:-$(nproc)} -C build/release daemon
 
 # Select Ubuntu 20.04LTS for the image base
-FROM ubuntu:20.04
+FROM --platform=$BUILDPLATFORM ubuntu:20.04
 
 # Install remaining dependencies
 RUN apt-get update \
