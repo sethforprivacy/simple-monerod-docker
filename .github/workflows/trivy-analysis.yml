@@ -26,6 +26,7 @@ jobs:
         uses: docker/build-push-action@v3.0.0
         with:
           push: false
+          load: true
           platforms: linux/amd64
           tags: sethforprivacy/simple-monerod:alpine
       - 
