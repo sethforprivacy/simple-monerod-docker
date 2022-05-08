@@ -6,7 +6,7 @@ ARG MONERO_BRANCH=v0.17.3.2
 ARG MONERO_COMMIT_HASH=424e4de16b98506170db7b0d7d87a79ccf541744
 
 # Select Ubuntu 20.04LTS for the build image base
-FROM --platform=${BUILDPLATFORM} ubuntu:20.04 as build
+FROM --platform=$BUILDPLATFORM ubuntu:20.04 as build
 LABEL author="sethsimmons@pm.me" \
       maintainer="sethsimmons@pm.me"
 
