@@ -14,12 +14,13 @@ jobs:
     name: "Build image with cache"
     runs-on: ubuntu-latest
     steps:
-      -
+      - 
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
-      - name: "Checkout repository"
-        uses: "actions/checkout@v3"
-      -
+      - 
+        name: Checkout repository
+        uses: actions/checkout@v3
+      - 
         name: Build image
         id: docker_build
         uses: docker/build-push-action@v3.0.0
@@ -27,6 +28,6 @@ jobs:
           push: false
           tags: simple-monerod:ubuntu-test
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
-      -
+      - 
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
