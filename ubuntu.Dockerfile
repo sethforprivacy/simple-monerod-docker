@@ -43,7 +43,7 @@ RUN git clone --recursive --branch ${MONERO_BRANCH} \
     && git submodule init && git submodule update \
     && mkdir -p build/release && cd build/release \
     && cmake -D STATIC=ON -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-x64" ../.. \
-    && cd /monero && nice -n 19 ionice -c2 -n7 make -d -j${NPROC:-$(nproc)} -C build/release daemon
+    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
 # Select Ubuntu 20.04LTS for the image base
 FROM --platform=$BUILDPLATFORM ubuntu:20.04
