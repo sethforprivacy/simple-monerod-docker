@@ -8,7 +8,7 @@ ARG MONERO_BRANCH=v0.17.3.2
 ARG MONERO_COMMIT_HASH=424e4de16b98506170db7b0d7d87a79ccf541744
 
 # Select Alpine 3.15 for the build image base
-FROM --platform=$BUILDPLATFORM alpine:3.15 as build
+FROM alpine:3.15 as build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -106,7 +106,7 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
 
 # Begin final image build
 # Select Alpine 3.15 for the image base
-FROM --platform=$BUILDPLATFORM alpine:3.15
+FROM alpine:3.15
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade

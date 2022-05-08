@@ -30,7 +30,7 @@ jobs:
         with:
           push: false
           file: ./ubuntu.Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm/v8,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm
           tags: simple-monerod:ubuntu-test
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
       - 
