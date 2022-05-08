@@ -101,7 +101,7 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
     && git submodule init && git submodule update \
     && mkdir -p build/release && cd build/release \
-    && cmake -D STATIC=ON -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-x64" ../.. \
+    && cmake -D STATIC=ON -D CMAKE_BUILD_TYPE=Release ../.. \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
 # Begin final image build

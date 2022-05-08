@@ -16,9 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - 
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.0.0
-      - 
         name: Checkout code
         uses: actions/checkout@v3
       - 
@@ -28,7 +25,6 @@ jobs:
           push: false
           load: true
           file: ./ubuntu.Dockerfile
-          platforms: linux/amd64
           tags: sethforprivacy/simple-monerod:ubuntu
       - 
         name: Run Trivy vulnerability scanner against Ubuntu image
