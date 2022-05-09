@@ -30,7 +30,7 @@ jobs:
         with:
           push: false
           file: ./ubuntu.Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm
+          platforms: linux/amd64,linux/arm64
           tags: simple-monerod:ubuntu-test
       - 
         name: Image digest
