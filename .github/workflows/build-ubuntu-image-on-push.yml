@@ -32,6 +32,7 @@ jobs:
           file: ./ubuntu.Dockerfile
           platforms: linux/amd64,linux/arm64
           tags: simple-monerod:ubuntu-test
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
       - 
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
