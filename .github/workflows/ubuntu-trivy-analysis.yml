@@ -15,19 +15,14 @@ jobs:
     name: Build and scan images
     runs-on: ubuntu-latest
     steps:
-      - 
-        name: Checkout code
+      - name: Checkout code
         uses: actions/checkout@v3
-      - 
-        name: Build Ubuntu image from Dockerfile
-        uses: docker/build-push-action@v3.0.0
-        with:
-          push: false
-          load: true
-          file: ./ubuntu.Dockerfile
-          tags: sethforprivacy/simple-monerod:ubuntu
-      - 
-        name: Run Trivy vulnerability scanner against Ubuntu image
+
+      - name: Build Alpine image from Dockerfile
+        run: |
+          docker build -f ubuntu.Dockerfile -t sethforprivacy/simple-monerod:ubuntu .
+
+      - name: Run Trivy vulnerability scanner against Alpine image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'sethforprivacy/simple-monerod:ubuntu'
@@ -36,7 +31,7 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: Upload Ubuntu Trivy scan results to GitHub Security tab
+      - name: Upload Alpine Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
