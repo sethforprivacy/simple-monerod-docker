@@ -105,7 +105,7 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
 # Begin final image build
-# Select Alpine 3.15 for the image base
+# Select Alpine 3.15 for the base image
 FROM alpine:3.15
 
 # Upgrade base image

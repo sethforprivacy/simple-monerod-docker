@@ -35,8 +35,7 @@ ENV BOOST_DEBUG         1
 # Switch to Monero source directory
 WORKDIR /monero
 
-# Git pull Monero source at specified tag/branch
-# Make static Monero binaries
+# Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
 RUN git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
@@ -45,7 +44,8 @@ RUN git clone --recursive --branch ${MONERO_BRANCH} \
     && cmake -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release ../.. \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
-# Select Ubuntu 20.04LTS for the image base
+# Begin final image build
+# Select Ubuntu 20.04LTS for the base image
 FROM ubuntu:20.04
 
 # Install remaining dependencies
