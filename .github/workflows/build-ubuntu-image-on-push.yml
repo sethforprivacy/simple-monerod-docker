@@ -34,7 +34,7 @@ jobs:
           tags: simple-monerod:ubuntu-amd64
       - 
         name: x86_64 image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        run: echo ${{ steps.docker_build_amd64.outputs.digest }}
       - 
         name: Test-run x84_64 image
         run: |
@@ -54,7 +54,7 @@ jobs:
           tags: simple-monerod:ubuntu-arm64
       - 
         name: ARMv8 image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        run: echo ${{ steps.docker_build_arm64.outputs.digest }}
       - 
         name: Test-run ARMv8 image
         run: |
