@@ -29,6 +29,7 @@ jobs:
         uses: docker/build-push-action@v3.0.0
         with:
           push: false
+          load: true
           file: ./ubuntu.Dockerfile
           platforms: linux/amd64,linux/arm64
           tags: simple-monerod:ubuntu-test
