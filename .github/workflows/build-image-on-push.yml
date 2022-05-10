@@ -24,17 +24,13 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v3
       - 
-        name: Build image
+        name: Build test image
         id: docker_build
         uses: docker/build-push-action@v3.0.0
         with:
           push: false
           load: true
-          platforms: linux/amd64,linux/arm64
           tags: simple-monerod:alpine-test
-      - 
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
       - 
         name: Test-run image
         run: |
@@ -42,3 +38,14 @@ jobs:
           PID=$!
           sleep 60
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
+      - 
+        name: Build ARMv8 image
+        id: docker_build
+        uses: docker/build-push-action@v3.0.0
+        with:
+          push: false
+          platforms: linux/arm64
+          tags: simple-monerod:alpine-test
+      - 
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
