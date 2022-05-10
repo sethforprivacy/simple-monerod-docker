@@ -34,23 +34,47 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v3
       - 
-        name: Build test image
+        name: Build x86_64 image
+        id: docker_build_amd64
         uses: docker/build-push-action@v3.0.0
         with:
           push: false
           load: true
           file: ./ubuntu.Dockerfile
-          tags: simple-monerod:ubuntu-test
+          tags: simple-monerod:ubuntu-amd64
       - 
-        name: Test-run image
+        name: x86_64 image digest
+        run: echo ${{ steps.docker_build_amd64.outputs.digest }}
+      - 
+        name: Test-run x84_64 image
         run: |
-          docker run --rm simple-monerod:ubuntu-test &
+          docker run --rm simple-monerod:ubuntu-amd64 &
+          PID=$!
+          sleep 60
+          kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
+      - 
+        name: Build ARMv8 image
+        id: docker_build_arm64
+        uses: docker/build-push-action@v3.0.0
+        with:
+          push: false
+          load: true
+          file: ./ubuntu.Dockerfile
+          platforms: linux/arm64
+          tags: simple-monerod:ubuntu-arm64
+      - 
+        name: ARMv8 image digest
+        run: echo ${{ steps.docker_build_arm64.outputs.digest }}
+      - 
+        name: Test-run ARMv8 image
+        run: |
+          docker run --rm simple-monerod:ubuntu-arm64 &
           PID=$!
           sleep 60
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
       - 
         name: Build and push to Docker Hub and Github Packages Docker Registry
-        id: docker_build
+        id: docker_build_push
         uses: docker/build-push-action@v3.0.0
         with:
           push: true
@@ -65,4 +89,4 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
       - 
         name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        run: echo ${{ steps.docker_build_push.outputs.digest }}

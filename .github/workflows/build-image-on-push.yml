@@ -24,27 +24,39 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v3
       - 
-        name: Build test image
+        name: Build x86_64 image
+        id: docker_build_amd64
         uses: docker/build-push-action@v3.0.0
         with:
           push: false
           load: true
-          tags: simple-monerod:alpine-test
+          tags: simple-monerod:alpine-amd64
       - 
-        name: Test-run image
+        name: x86_64 image digest
+        run: echo ${{ steps.docker_build_amd64.outputs.digest }}
+      - 
+        name: Test-run x84_64 image
         run: |
-          docker run --rm simple-monerod:alpine-test &
+          docker run --rm simple-monerod:alpine-amd64 &
           PID=$!
           sleep 60
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
       - 
         name: Build ARMv8 image
-        id: docker_build
+        id: docker_build_arm64
         uses: docker/build-push-action@v3.0.0
         with:
           push: false
+          load: true
           platforms: linux/arm64
-          tags: simple-monerod:alpine-test
+          tags: simple-monerod:alpine-arm64
       - 
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        name: ARMv8 image digest
+        run: echo ${{ steps.docker_build_arm64.outputs.digest }}
+      - 
+        name: Test-run ARMv8 image
+        run: |
+          docker run --rm simple-monerod:alpine-arm64 &
+          PID=$!
+          sleep 60
+          kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
