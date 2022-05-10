@@ -38,6 +38,21 @@ jobs:
         id: get_tag
         run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
       - 
+        name: Build test image
+        id: docker_build
+        uses: docker/build-push-action@v3.0.0
+        with:
+          push: false
+          load: true
+          tags: simple-monerod:alpine-test
+      - 
+        name: Test-run image
+        run: |
+          docker run --rm simple-monerod:alpine-test &
+          PID=$!
+          sleep 60
+          kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
+      - 
         name: Build and push to Docker Hub and Github Packages Docker Registry
         id: docker_build
         uses: docker/build-push-action@v3.0.0
