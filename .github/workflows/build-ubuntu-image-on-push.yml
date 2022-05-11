@@ -14,19 +14,44 @@ jobs:
     name: "Build image with cache"
     runs-on: ubuntu-latest
     steps:
-      -
+      - 
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2.0.0
+      - 
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
-      - name: "Checkout repository"
-        uses: "actions/checkout@v3"
-      -
-        name: Build image
-        id: docker_build
+      - 
+        name: Checkout repository
+        uses: actions/checkout@v3
+      - 
+        name: Build x86_64 image
+        id: docker_build_amd64
         uses: docker/build-push-action@v3.0.0
         with:
           push: false
+          load: true
+          file: ./ubuntu.Dockerfile
           tags: simple-monerod:ubuntu-test
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+      - 
+        name: x86_64 image digest
+        run: echo ${{ steps.docker_build_amd64.outputs.digest }}
+      - 
+        name: Test-run x84_64 image
+        run: |
+          docker run --rm simple-monerod:ubuntu-test &
+          PID=$!
+          sleep 60
+          kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
+      - 
+        name: Build ARMv8 image
+        id: docker_build_arm64
+        uses: docker/build-push-action@v3.0.0
+        with:
+          push: false
+          load: true
+          file: ./ubuntu.Dockerfile
+          platforms: linux/arm64
+          tags: simple-monerod:ubuntu-test
+      - 
+        name: ARMv8 image digest
+        run: echo ${{ steps.docker_build_arm64.outputs.digest }}
