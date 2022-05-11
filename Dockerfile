@@ -8,7 +8,7 @@ ARG MONERO_BRANCH=v0.17.3.2
 ARG MONERO_COMMIT_HASH=424e4de16b98506170db7b0d7d87a79ccf541744
 
 # Select Alpine 3.15 for the build image base
-FROM alpine:3.15 as build
+FROM --platform=${BUILDPLATFORM} alpine:3.15 as build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -87,6 +87,7 @@ RUN set -ex && apk add --update --no-cache \
 ARG MONERO_BRANCH
 ARG MONERO_COMMIT_HASH
 ARG NPROC
+ARG TARGETARCH
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC -DELPP_FEATURE_CRASH_LOG'
 ENV USE_SINGLE_BUILDDIR 1
@@ -99,10 +100,11 @@ WORKDIR /monero
 RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
-    && git submodule init && git submodule update \
-    && mkdir -p build/release && cd build/release \
-    && cmake -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release ../.. \
-    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
+    && case "${TARGETARCH}" in \
+        "amd64") make -j${NPROC:-$(nproc)} depends target=x86_64-linux-gnu ;; \
+        "arm64") make -j${NPROC:-$(nproc)} depends target=aarch64-linux-gnu ;; \
+        *) exit 1 ;; \
+    esac
 
 # Begin final image build
 # Select Alpine 3.15 for the base image

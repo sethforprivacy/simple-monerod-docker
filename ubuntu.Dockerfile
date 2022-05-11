@@ -6,7 +6,7 @@ ARG MONERO_BRANCH=v0.17.3.2
 ARG MONERO_COMMIT_HASH=424e4de16b98506170db7b0d7d87a79ccf541744
 
 # Select Ubuntu 20.04LTS for the build image base
-FROM ubuntu:20.04 as build
+FROM --platform=${BUILDPLATFORM} ubuntu:20.04 as build
 LABEL author="sethsimmons@pm.me" \
       maintainer="sethsimmons@pm.me"
 
@@ -18,8 +18,8 @@ RUN apt-get update \
     pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev ca-certificates \
     libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev \
     libexpat1-dev doxygen graphviz libpgm-dev qttools5-dev-tools libhidapi-dev \
-    libusb-dev libprotobuf-dev protobuf-compiler libgtest-dev git \
-    libnorm-dev libpgm-dev libusb-1.0-0-dev libudev-dev libgssapi-krb5-2 \
+    libusb-dev libprotobuf-dev protobuf-compiler libgtest-dev git curl \
+    libnorm-dev libpgm-dev libusb-1.0-0-dev libudev-dev libgssapi-krb5-2 g++-aarch64-linux-gnu \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -27,10 +27,11 @@ RUN apt-get update \
 ARG MONERO_BRANCH
 ARG MONERO_COMMIT_HASH
 ARG NPROC
+ARG TARGETARCH
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC'
 ENV USE_SINGLE_BUILDDIR 1
-ENV BOOST_DEBUG         1
+#ENV BOOST_DEBUG         1
 
 # Switch to Monero source directory
 WORKDIR /monero
@@ -39,10 +40,11 @@ WORKDIR /monero
 RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
-    && git submodule init && git submodule update \
-    && mkdir -p build/release && cd build/release \
-    && cmake -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release ../.. \
-    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
+    && case "${TARGETARCH}" in \
+        "amd64") make -j${NPROC:-$(nproc)} depends target=x86_64-linux-gnu ;; \
+        "arm64") make -j${NPROC:-$(nproc)} depends target=aarch64-linux-gnu ;; \
+        *) exit 1 ;; \
+    esac
 
 # Begin final image build
 # Select Ubuntu 20.04LTS for the base image
