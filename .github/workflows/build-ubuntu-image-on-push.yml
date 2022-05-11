@@ -58,7 +58,7 @@ jobs:
       - 
         name: Test-run ARMv8 image
         run: |
-          docker run --rm simple-monerod:ubuntu-arm64 &
+          docker run --rm --platform linux/arm64 simple-monerod:ubuntu-arm64 &
           PID=$!
           sleep 60
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on

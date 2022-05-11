@@ -36,7 +36,7 @@ ENV BOOST_DEBUG         1
 WORKDIR /monero
 
 # Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
-RUN git clone --recursive --branch ${MONERO_BRANCH} \
+RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
     && git submodule init && git submodule update \
