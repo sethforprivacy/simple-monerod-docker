@@ -64,6 +64,7 @@ RUN set -ex && apk add --update --no-cache \
     eudev-dev \
     file \
     g++ \
+    g++-aarch64-linux-gnu \
     git \
     graphviz \
     libexecinfo-dev \
