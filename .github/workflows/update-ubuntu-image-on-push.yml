@@ -43,6 +43,7 @@ jobs:
           push: false
           load: true
           file: ./ubuntu.Dockerfile
+          platforms: linux/amd64
           tags: simple-monerod:ubuntu-amd64
       - 
         name: x86_64 image digest

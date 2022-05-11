@@ -46,6 +46,7 @@ jobs:
         with:
           push: false
           load: true
+          platforms: linux/amd64
           tags: simple-monerod:alpine-amd64
       - 
         name: x86_64 image digest
