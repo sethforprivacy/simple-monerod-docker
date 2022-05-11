@@ -56,25 +56,6 @@ jobs:
           sleep 60
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
       - 
-        name: Build ARMv8 image
-        id: docker_build_arm64
-        uses: docker/build-push-action@v3.0.0
-        with:
-          push: false
-          load: true
-          platforms: linux/arm64
-          tags: simple-monerod:alpine-arm64
-      - 
-        name: ARMv8 image digest
-        run: echo ${{ steps.docker_build_arm64.outputs.digest }}
-      - 
-        name: Test-run ARMv8 image
-        run: |
-          docker run --rm simple-monerod:alpine-arm64 &
-          PID=$!
-          sleep 60
-          kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
-      - 
         name: Build and push to Docker Hub and Github Packages Docker Registry
         uses: docker/build-push-action@v3.0.0
         id: docker_build_push
@@ -93,5 +74,5 @@ jobs:
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
       - 
-        name: ARMv8 image digest
+        name: Multi-arch image digest
         run: echo ${{ steps.docker_build_push.outputs.digest }}
