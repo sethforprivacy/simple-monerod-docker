@@ -9,6 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - 
+        name: Prep
+        id: prep
+        run: |
+          echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+      - 
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2.0.0
         with:
@@ -33,7 +38,7 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v3
       - 
-        name: Build and push to Docker Hub and Github Packages Docker Registry
+        name: Build and push to Docker Hub and GitHub Packages Docker Registry
         id: docker_build
         uses: docker/build-push-action@v3.0.0
         with:
