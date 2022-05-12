@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - 
+        name: Prep
+        id: prep
+        run: |
+          echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+      - 
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2.0.0
         with:
@@ -55,21 +60,32 @@ jobs:
           PID=$!
           sleep 60
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
+      #- 
+        #name: Build and push to Docker Hub and Github Packages Docker Registry
+        #id: docker_build_push
+        #uses: docker/build-push-action@v3.0.0
+        #with:
+          #push: true
+          #file: ./ubuntu.Dockerfile
+          #platforms: linux/amd64,linux/arm64
+          #tags: |
+            #ghcr.io/${{ github.repository_owner }}/simple-monerod:ubuntu
+            #${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
+          #labels: |
+            #org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            #org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            #org.opencontainers.image.revision=${{ github.sha }}
       - 
-        name: Build and push to Docker Hub and Github Packages Docker Registry
+        name: Build and push to Docker Hub and GitHub Packages Docker Registry (inline cmd)
         id: docker_build_push
-        uses: docker/build-push-action@v3.0.0
-        with:
-          push: true
-          file: ./ubuntu.Dockerfile
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/simple-monerod:ubuntu
-            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
-          labels: |
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-            org.opencontainers.image.revision=${{ github.sha }}
+        run: |
+          docker buildx build --platform linux/amd64,linux/arm64 \
+              --label org.opencontainers.image.source=${{ github.event.repository.html_url }} \
+              --label org.opencontainers.image.created=${{ steps.prep.outputs.created }} \
+              --label org.opencontainers.image.revision=${{ github.sha }} \
+              -t ghcr.io/${{ github.repository_owner }}/simple-monerod:ubuntu \
+              -t ${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu \
+              -f ./ubuntu.Dockerfile --push
       - 
         name: Multi-arch image digest
         run: echo ${{ steps.docker_build_push.outputs.digest }}
