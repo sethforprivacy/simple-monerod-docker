@@ -36,9 +36,6 @@ ENV BOOST_DEBUG         1
 # Switch to Monero source directory
 WORKDIR /monero
 
-# Print arch
-RUN echo $(uname -m)
-
 # Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
 RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \

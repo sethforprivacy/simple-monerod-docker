@@ -87,6 +87,7 @@ RUN set -ex && apk add --update --no-cache \
 ARG MONERO_BRANCH
 ARG MONERO_COMMIT_HASH
 ARG NPROC
+ARG TARGETARCH
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC -DELPP_FEATURE_CRASH_LOG'
 ENV USE_SINGLE_BUILDDIR 1
@@ -99,8 +100,13 @@ WORKDIR /monero
 RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
+    && case ${TARGETARCH:-amd64} in \
+        "arm64") CMAKE_ARCH="armv8-a"; CMAKE_BUILD_TAG="linux-armv8" ;; \
+        "amd64") CMAKE_ARCH="x86-64"; CMAKE_BUILD_TAG="linux-x64" ;; \
+        *) echo "Dockerfile does not support this platform"; exit 1 ;; \
+    esac \
     && mkdir -p build/release && cd build/release \
-    && cmake -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release ../.. \
+    && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} ../.. \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
 # Begin final image build

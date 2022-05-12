@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - 
-        name: Prep
+        name: Prepare outputs
         id: prep
         run: |
           echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
