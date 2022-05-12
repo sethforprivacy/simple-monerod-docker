@@ -1,11 +1,13 @@
 name: "Update image when Dockerfile is changed"
-# Run this workflow every time a new commit pushed to your repository
+
 on:
   push:
     branches:
     - main
     paths:
     - 'Dockerfile'
+  workflow_dispatch:
+
 jobs:
   rebuild-container:
     name: "Rebuild Container with the latest base image"

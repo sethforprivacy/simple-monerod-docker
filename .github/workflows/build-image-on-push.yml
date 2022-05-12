@@ -1,4 +1,5 @@
 name: "Test build of image when Dockerfile is changed"
+
 on:
   push:
     paths:
@@ -9,6 +10,7 @@ on:
     paths:
     - 'Dockerfile'
   workflow_dispatch:
+
 jobs:
   rebuild-container:
     name: "Build image with cache"
