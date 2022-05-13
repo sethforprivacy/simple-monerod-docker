@@ -39,10 +39,7 @@ jobs:
           tags: simple-monerod:ubuntu-test
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
       - 
-        name: x86_64 image digest
-        run: echo ${{ steps.docker_build_amd64.outputs.digest }}
-      - 
-        name: Test-run x84_64 image
+        name: Test-run x86_64 image
         run: |
           docker run --rm simple-monerod:ubuntu-test &
           PID=$!
@@ -59,6 +56,3 @@ jobs:
           platforms: linux/arm64
           tags: simple-monerod:ubuntu-test
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
-      - 
-        name: ARMv8 image digest
-        run: echo ${{ steps.docker_build_arm64.outputs.digest }}

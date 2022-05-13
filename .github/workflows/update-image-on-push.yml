@@ -45,7 +45,7 @@ jobs:
       - 
         name: Get Monero Release Tag
         id: get_tag
-        run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
+        run: echo "::set-output name=tag::$(awk -F '=' '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
       - 
         name: Build x86_64 image
         id: docker_build_amd64
@@ -58,10 +58,7 @@ jobs:
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
           cache-to: type=inline
       - 
-        name: x86_64 image digest
-        run: echo ${{ steps.docker_build_amd64.outputs.digest }}
-      - 
-        name: Test-run x84_64 image
+        name: Test-run x86_64 image
         run: |
           docker run --rm simple-monerod:alpine-amd64 &
           PID=$!
@@ -87,6 +84,3 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
           cache-to: type=inline
-      - 
-        name: Multi-arch image digest
-        run: echo ${{ steps.docker_build_push.outputs.digest }}

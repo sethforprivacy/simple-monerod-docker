@@ -42,7 +42,7 @@ jobs:
       - 
         name: Get Monero Release Tag
         id: get_tag
-        run: echo "::set-output name=tag::$(awk -F "=" '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
+        run: echo "::set-output name=tag::$(awk -F '=' '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
       - 
         name: Build and push to Docker Hub and GitHub Packages Docker Registry
         id: docker_build
@@ -59,6 +59,3 @@ jobs:
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
-      - 
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
