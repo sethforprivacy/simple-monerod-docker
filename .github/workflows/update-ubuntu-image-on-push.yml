@@ -52,6 +52,8 @@ jobs:
           file: ./ubuntu.Dockerfile
           platforms: linux/amd64
           tags: simple-monerod:ubuntu-amd64
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
+          cache-to: type=inline
       - 
         name: x86_64 image digest
         run: echo ${{ steps.docker_build_amd64.outputs.digest }}
@@ -77,6 +79,8 @@ jobs:
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:ubuntu
+          cache-to: type=inline
       - 
         name: Multi-arch image digest
         run: echo ${{ steps.docker_build_push.outputs.digest }}
