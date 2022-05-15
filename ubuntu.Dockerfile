@@ -38,6 +38,7 @@ WORKDIR /monero
 
 # Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
 RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
+    --depth 1 --shallow-submodules \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
     && mkdir -p build/release && cd build/release \
