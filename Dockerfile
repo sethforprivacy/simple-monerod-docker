@@ -126,6 +126,7 @@ RUN set -ex && apk add --update --no-cache \
     ncurses-libs \
     pcsc-lite-libs \
     readline \
+    unbound-dev \
     zeromq
 
 # Add user and setup directories for monerod
