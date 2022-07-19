@@ -45,7 +45,7 @@ jobs:
       - 
         name: Build x86_64 image
         id: docker_build_amd64
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.1.0
         with:
           push: false
           load: true
@@ -64,7 +64,7 @@ jobs:
       - 
         name: Build and push to Docker Hub and GitHub Packages Docker Registry
         id: docker_build_push
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.1.0
         with:
           push: true
           file: ./ubuntu.Dockerfile

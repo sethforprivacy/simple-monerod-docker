@@ -42,7 +42,7 @@ jobs:
       - 
         name: Build and push to Docker Hub and GitHub Packages Docker Registry
         id: docker_build
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.1.0
         with:
           file: ./ubuntu.Dockerfile
           push: true
