@@ -2,13 +2,13 @@
 # Alpine specifics from https://github.com/cornfeedhobo/docker-monero/blob/f96711415f97af1fc9364977d1f5f5ecd313aad0/Dockerfile
 
 # Set Monero branch or tag to build
-ARG MONERO_BRANCH=v0.17.3.2
+ARG MONERO_BRANCH=v0.18.0.0
 
 # Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
-ARG MONERO_COMMIT_HASH=424e4de16b98506170db7b0d7d87a79ccf541744
+ARG MONERO_COMMIT_HASH=b6a029f222abada36c7bc6c65899a4ac969d7dee
 
-# Select Alpine 3.15 for the build image base
-FROM alpine:3.15 as build
+# Select Alpine 3.x for the build image base
+FROM alpine:3 as build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -111,8 +111,8 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
 # Begin final image build
-# Select Alpine 3.15 for the base image
-FROM alpine:3.15
+# Select Alpine 3.x for the base image
+FROM alpine:3
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
@@ -126,6 +126,7 @@ RUN set -ex && apk add --update --no-cache \
     ncurses-libs \
     pcsc-lite-libs \
     readline \
+    unbound-dev \
     zeromq
 
 # Add user and setup directories for monerod
