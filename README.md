@@ -24,7 +24,6 @@ https://hub.docker.com/r/sethsimmons/simple-monerod
 I will always release the latest Monero version under the `latest` tag as well as the version number tag (i.e. `v0.17.3.2`).
 
 `latest`: The latest tagged version of Monero from https://github.com/monero-project/monero/tags, built on an Alpine base image  
-`alpine`: The latest tagged version of Monero from https://github.com/monero-project/monero/tags, built on an Alpine base image  
 `vx.xx.x.x`: The version corresponding with the tagged version from https://github.com/monero-project/monero/tags, built on an Alpine base image  
 
 Note that the primary focus and images are using the Alpine base image, but I will continue to support the Ubuntu based image for now.
