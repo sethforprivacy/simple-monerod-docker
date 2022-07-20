@@ -4,10 +4,8 @@ A simple and straightforward Dockerized monerod built from source and exposing s
 
 ## Actions
 
-[![Weekly Alpine Update Rebuild](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml)  
-[![Weekly Ubuntu Update Rebuild](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-ubuntu-base-image.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-ubuntu-base-image.yml)  
-[![Latest Alpine Dockerfile build on push](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml)  
-[![Latest Ubuntu Dockerfile build on push](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-ubuntu-image-on-push.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-ubuntu-image-on-push.yml)  
+[![Weekly Update Rebuild](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml)  
+[![Latest Dockerfile build on push](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml)  
 
 ## Docker
 
@@ -27,7 +25,6 @@ I will always release the latest Monero version under the `latest` tag as well a
 
 `latest`: The latest tagged version of Monero from https://github.com/monero-project/monero/tags, built on an Alpine base image  
 `alpine`: The latest tagged version of Monero from https://github.com/monero-project/monero/tags, built on an Alpine base image  
-`ubuntu`: The latest tagged version of Monero from https://github.com/monero-project/monero/tags, built on an Ubuntu base image  
 `vx.xx.x.x`: The version corresponding with the tagged version from https://github.com/monero-project/monero/tags, built on an Alpine base image  
 
 Note that the primary focus and images are using the Alpine base image, but I will continue to support the Ubuntu based image for now.
