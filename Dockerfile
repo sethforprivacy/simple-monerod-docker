@@ -93,18 +93,18 @@ ENV USE_SINGLE_BUILDDIR 1
 ENV BOOST_DEBUG         1
 
 # Build expat, a dependency for libunbound
-RUN wget https://github.com/libexpat/libexpat/releases/download/R_2_4_1/expat-2.4.1.tar.bz2 && \
-    echo "2f9b6a580b94577b150a7d5617ad4643a4301a6616ff459307df3e225bcfbf40  expat-2.4.1.tar.bz2" | sha256sum -c && \
-    tar -xf expat-2.4.1.tar.bz2 && \
-    rm expat-2.4.1.tar.bz2 && \
-    cd expat-2.4.1 && \
+RUN set -ex && wget https://github.com/libexpat/libexpat/releases/download/R_2_4_1/expat-2.4.8.tar.bz2 && \
+    echo "a247a7f6bbb21cf2ca81ea4cbb916bfb9717ca523631675f99b3d4a5678dcd16  expat-2.4.8.tar.bz2" | sha256sum -c && \
+    tar -xf expat-2.4.8.tar.bz2 && \
+    rm expat-2.4.8.tar.bz2 && \
+    cd expat-2.4.8 && \
     ./configure --enable-static --disable-shared --prefix=/usr && \
     make -j${NPROC:-$(nproc)} && \
     make -j${NPROC:-$(nproc)} install
 
 # Build libunbound for static builds
 WORKDIR /tmp
-RUN wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.16.1.tar.gz && \
+RUN set -ex && wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.16.1.tar.gz && \
     echo "2fe4762abccd564a0738d5d502f57ead273e681e92d50d7fba32d11103174e9a  unbound-1.16.1.tar.gz" | sha256sum -c && \
     tar -xzf unbound-1.16.1.tar.gz && \
     rm unbound-1.16.1.tar.gz && \
