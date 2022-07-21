@@ -94,11 +94,11 @@ ENV BOOST_DEBUG         1
 
 # Build libunbound for static builds
 WORKDIR /tmp
-RUN wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.13.2.tar.gz && \
-    echo "0a13b547f3b92a026b5ebd0423f54c991e5718037fd9f72445817f6a040e1a83 unbound-1.13.2.tar.gz" | sha256sum -c && \
-    tar -xzf unbound-1.13.2.tar.gz && \
-    rm unbound-1.13.2.tar.gz && \
-    cd unbound-1.13.2 && \
+RUN wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.16.1.tar.gz && \
+    echo "2fe4762abccd564a0738d5d502f57ead273e681e92d50d7fba32d11103174e9a unbound-1.16.1.tar.gz" | sha256sum -c && \
+    tar -xzf unbound-1.16.1.tar.gz && \
+    rm unbound-1.16.1.tar.gz && \
+    cd unbound-1.16.1 && \
     ./configure --disable-shared --enable-static --without-pyunbound --with-libexpat=/usr --with-ssl=/usr --with-libevent=no --without-pythonmodule --disable-flto --with-pthreads --with-libunbound-only --with-pic && \
     make -j${NPROC:-$(nproc)} && \
     make -j${NPROC:-$(nproc)} install
