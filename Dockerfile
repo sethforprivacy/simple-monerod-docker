@@ -95,7 +95,7 @@ ENV BOOST_DEBUG         1
 # Build libunbound for static builds
 WORKDIR /tmp
 RUN wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.16.1.tar.gz && \
-    echo "2fe4762abccd564a0738d5d502f57ead273e681e92d50d7fba32d11103174e9a unbound-1.16.1.tar.gz" | sha256sum -c && \
+    echo "2fe4762abccd564a0738d5d502f57ead273e681e92d50d7fba32d11103174e9a  unbound-1.16.1.tar.gz" | sha256sum -c && \
     tar -xzf unbound-1.16.1.tar.gz && \
     rm unbound-1.16.1.tar.gz && \
     cd unbound-1.16.1 && \
