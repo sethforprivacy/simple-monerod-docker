@@ -80,7 +80,6 @@ RUN set -ex && apk add --update --no-cache \
     protobuf-dev \
     rapidjson-dev \
     readline-dev \
-    unbound-dev \
     zeromq-dev
 
 # Set necessary args and environment variables for building Monero
@@ -92,6 +91,17 @@ ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC -DELPP_FEATURE_CRASH_LOG'
 ENV USE_SINGLE_BUILDDIR 1
 ENV BOOST_DEBUG         1
+
+# Build libunbound for static builds
+WORKDIR /tmp
+RUN wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.13.2.tar.gz && \
+    echo "0a13b547f3b92a026b5ebd0423f54c991e5718037fd9f72445817f6a040e1a83 unbound-1.13.2.tar.gz" | sha256sum -c && \
+    tar -xzf unbound-1.13.2.tar.gz && \
+    rm unbound-1.13.2.tar.gz && \
+    cd unbound-1.13.2 && \
+    ./configure --disable-shared --enable-static --without-pyunbound --with-libexpat=/usr --with-ssl=/usr --with-libevent=no --without-pythonmodule --disable-flto --with-pthreads --with-libunbound-only --with-pic && \
+    make -j${NPROC:-$(nproc)} && \
+    make -j${NPROC:-$(nproc)} install
 
 # Switch to Monero source directory
 WORKDIR /monero
@@ -126,7 +136,6 @@ RUN set -ex && apk add --update --no-cache \
     ncurses-libs \
     pcsc-lite-libs \
     readline \
-    unbound-dev \
     zeromq
 
 # Add user and setup directories for monerod
