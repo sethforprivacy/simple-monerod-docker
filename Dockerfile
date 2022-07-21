@@ -92,6 +92,16 @@ ENV CXXFLAGS='-fPIC -DELPP_FEATURE_CRASH_LOG'
 ENV USE_SINGLE_BUILDDIR 1
 ENV BOOST_DEBUG         1
 
+# Build expat, a dependency for libunbound
+RUN wget https://github.com/libexpat/libexpat/releases/download/R_2_4_1/expat-2.4.1.tar.bz2 && \
+    echo "2f9b6a580b94577b150a7d5617ad4643a4301a6616ff459307df3e225bcfbf40  expat-2.4.1.tar.bz2" | sha256sum -c && \
+    tar -xf expat-2.4.1.tar.bz2 && \
+    rm expat-2.4.1.tar.bz2 && \
+    cd expat-2.4.1 && \
+    ./configure --enable-static --disable-shared --prefix=/usr && \
+    make -j${NPROC:-$(nproc)} && \
+    make -j${NPROC:-$(nproc)} install
+
 # Build libunbound for static builds
 WORKDIR /tmp
 RUN wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.16.1.tar.gz && \
