@@ -182,7 +182,7 @@ ARG MONERO_HOME="/home/${MONERO_USER}/.bitmonero"
 VOLUME ${MONERO_HOME}
 
 # Add HEALTHCHECK against get_info endpoint
-HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:18089/get_info || exit 1
+HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:18081/get_info || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
 CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist"]
