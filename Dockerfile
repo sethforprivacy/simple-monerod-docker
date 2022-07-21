@@ -155,7 +155,7 @@ RUN set -ex && adduser -Ds /bin/bash monero \
 
 # Copy and enable entrypoint script
 ADD entrypoint.sh /entrypoint.sh
-RUN ["chmod", "+x", "entrypoint.sh"]
+RUN set -ex && chmod +x entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
 
 # Install and configure fixuid and switch to MONERO_USER
