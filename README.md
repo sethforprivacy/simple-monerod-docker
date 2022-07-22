@@ -60,6 +60,15 @@ monerod Docker w/ public RPC (pruned):
 sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero sethsimmons/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
 ```
 
+## Running as a different user
+
+In situations where you need the daemon to be run as a different user, I have added [fixuid](https://github.com/boxboat/fixuid) to enable that. Much of the work for this was taken from [docker-monero](https://github.com/cornfeedhobo/docker-monero), and enables you to specify a new user/group in your `docker run` or `docker-compose.yml` file to run as a different user.
+
+- In `docker run` commands, you can specify the user like this: `--user 1000:1000`
+- In `docker-compose.yml` files, you can specify the user like this: `user: ${FIXUID:-1000}:${FIXGID:-1000}`
+
+A great use-case for this is running with the daemon's files stored on an NFS mount, or running monerod on a Synology NAS.
+
 ## Copyrights
 
 Code from this repository is released under MIT license. [Monero License](https://github.com/monero-project/monero/blob/master/LICENSE), [@leonardochaia License](https://github.com/leonardochaia/docker-monerod/blob/master/LICENSE)

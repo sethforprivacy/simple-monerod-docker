@@ -152,10 +152,23 @@ RUN set -ex && apk add --update --no-cache \
 RUN set -ex && adduser -Ds /bin/bash monero \
     && mkdir -p /home/monero/.bitmonero \
     && chown -R monero:monero /home/monero/.bitmonero
-USER monero
+
+# Copy and enable entrypoint script
+ADD entrypoint.sh /entrypoint.sh
+RUN set -ex && chmod +x entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
+
+# Install and configure fixuid and switch to MONERO_USER
+ARG MONERO_USER="monero"
+RUN set -ex && curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - && \
+    chown root:root /usr/local/bin/fixuid && \
+    chmod 4755 /usr/local/bin/fixuid && \
+    mkdir -p /etc/fixuid && \
+    printf "user: ${MONERO_USER}\ngroup: ${MONERO_USER}\n" > /etc/fixuid/config.yml
+USER "${MONERO_USER}:${MONERO_USER}"
 
 # Switch to home directory and install newly built monerod binary
-WORKDIR /home/monero
+WORKDIR /home/${MONERO_USER}
 COPY --chown=monero:monero --from=build /monero/build/release/bin/monerod /usr/local/bin/monerod
 
 # Expose p2p port
@@ -165,8 +178,7 @@ EXPOSE 18080
 EXPOSE 18089
 
 # Add HEALTHCHECK against get_info endpoint
-HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:18089/get_info || exit 1
+HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:18081/get_info || exit 1
 
-# Start monerod with required --non-interactive flag and sane defaults that are overridden by user input (if applicable)
-ENTRYPOINT ["monerod", "--non-interactive"]
+# Start monerod with sane defaults that are overridden by user input (if applicable)
 CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist"]
