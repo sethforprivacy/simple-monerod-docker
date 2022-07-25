@@ -161,11 +161,10 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 # Install and configure fixuid and switch to MONERO_USER
 ARG MONERO_USER="monero"
 RUN set -ex && case ${TARGETARCH:-amd64} in \
-        "arm64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-arm64.tar.gz ;; \
-        "amd64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-amd64.tar.gz ;; \
+        "arm64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-arm64.tar.gz | tar -C /usr/local/bin -xzf - ;; \
+        "amd64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - ;; \
         *) echo "Dockerfile does not support this platform"; exit 1 ;; \
     esac && \
-    tar -C /usr/local/bin -xzf - && \
     chown root:root /usr/local/bin/fixuid && \
     chmod 4755 /usr/local/bin/fixuid && \
     mkdir -p /etc/fixuid && \
