@@ -160,6 +160,7 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 
 # Install and configure fixuid and switch to MONERO_USER
 ARG MONERO_USER="monero"
+ARG TARGETARCH
 RUN set -ex && case ${TARGETARCH:-amd64} in \
         "arm64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-arm64.tar.gz | tar -C /usr/local/bin -xzf - ;; \
         "amd64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - ;; \
