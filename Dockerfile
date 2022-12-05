@@ -141,7 +141,6 @@ RUN set -ex && apk --update --no-cache upgrade
 RUN set -ex && apk add --update --no-cache \
     curl \
     ca-certificates \
-    libexecinfo \
     libsodium \
     ncurses-libs \
     pcsc-lite-libs \
