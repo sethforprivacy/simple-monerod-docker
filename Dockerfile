@@ -66,7 +66,6 @@ RUN set -ex && apk add --update --no-cache \
     g++ \
     git \
     graphviz \
-    libexecinfo-dev \
     libsodium-dev \
     libtool \
     libusb-dev \
