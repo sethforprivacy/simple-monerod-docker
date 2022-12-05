@@ -8,7 +8,7 @@ ARG MONERO_BRANCH=v0.18.1.2
 ARG MONERO_COMMIT_HASH=66184f30859796f3c7c22f9497e41b15b5a4a7c9
 
 # Select Alpine 3.x for the build image base
-FROM alpine:3 as build
+FROM alpine:3.16 as build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -66,6 +66,7 @@ RUN set -ex && apk add --update --no-cache \
     g++ \
     git \
     graphviz \
+    libexecinfo-dev \
     libsodium-dev \
     libtool \
     libusb-dev \
@@ -131,7 +132,7 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
 
 # Begin final image build
 # Select Alpine 3.x for the base image
-FROM alpine:3
+FROM alpine:3.16
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
@@ -140,6 +141,7 @@ RUN set -ex && apk --update --no-cache upgrade
 RUN set -ex && apk add --update --no-cache \
     curl \
     ca-certificates \
+    libexecinfo \
     libsodium \
     ncurses-libs \
     pcsc-lite-libs \
