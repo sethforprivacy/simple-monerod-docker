@@ -30,7 +30,7 @@ jobs:
       - 
         name: Build x86_64 image
         id: docker_build_amd64
-        uses: docker/build-push-action@v3.2.0
+        uses: docker/build-push-action@v3.3.0
         with:
           push: false
           load: true
@@ -47,7 +47,7 @@ jobs:
       - 
         name: Build ARMv8 image
         id: docker_build_arm64
-        uses: docker/build-push-action@v3.2.0
+        uses: docker/build-push-action@v3.3.0
         with:
           push: false
           load: true
