@@ -13,20 +13,12 @@ A simple and straightforward Dockerized monerod built from source and exposing s
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/sethsimmons/simple-monerod/latest)  
 ![Docker Image Version (latest by date)](https://img.shields.io/docker/v/sethsimmons/simple-monerod)  
 
-## Docker Hub
-
-This repo is used to build the images available at:
-
-https://hub.docker.com/r/sethsimmons/simple-monerod
-
 ## Tags
 
 I will always release the latest Monero version under the `latest` tag as well as the version number tag (i.e. `v0.18.0.0`).
 
 `latest`: The latest tagged version of Monero from https://github.com/monero-project/monero/tags, built on an Alpine base image  
 `vx.xx.x.x`: The version corresponding with the tagged version from https://github.com/monero-project/monero/tags, built on an Alpine base image  
-
-Note that the primary focus and images are using the Alpine base image, but I will continue to support the Ubuntu based image for now.
 
 ## Recommended usage
 
@@ -39,25 +31,25 @@ The ways I would generally recommend running this container for a personal or pu
 monerod Docker w/o public RPC:
 
 ```bash
-sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero sethsimmons/simple-monerod:latest --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --no-igd --no-zmq --enable-dns-blocklist
+sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero ghcr.io/sethforprivacy/simple-monerod:latest --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --no-igd --no-zmq --enable-dns-blocklist
 ```
 
 monerod Docker w/ public RPC:
 
 ```bash
-sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero sethsimmons/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist
+sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero ghcr.io/sethforprivacy/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist
 ```
 
 monerod Docker w/o public RPC (pruned):
 
 ```bash
-sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero sethsimmons/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
+sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero ghcr.io/sethforprivacy/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
 ```
 
 monerod Docker w/ public RPC (pruned):
 
 ```bash
-sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero sethsimmons/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
+sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero ghcr.io/sethforprivacy/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
 ```
 
 ## Running as a different user
