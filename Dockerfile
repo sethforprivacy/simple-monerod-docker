@@ -61,12 +61,12 @@ RUN set -ex && apk add --update --no-cache \
     curl \
     dev86 \
     doxygen \
+    elfutils-dev \
     eudev-dev \
     file \
     g++ \
     git \
     graphviz \
-    libexecinfo-dev \
     libsodium-dev \
     libtool \
     libusb-dev \
