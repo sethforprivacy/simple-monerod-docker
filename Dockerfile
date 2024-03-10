@@ -7,8 +7,8 @@ ARG MONERO_BRANCH=v0.18.3.2
 # Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
 ARG MONERO_COMMIT_HASH=ef3e18b51beb937c7f786ecef0d0a0e3f6295082
 
-# Select Alpine 3.x for the build image base
-FROM alpine:3.16 as build
+# Select Alpine 3 for the build image base
+FROM alpine:3 as build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -93,22 +93,26 @@ ENV USE_SINGLE_BUILDDIR 1
 ENV BOOST_DEBUG         1
 
 # Build expat, a dependency for libunbound
-RUN set -ex && wget https://github.com/libexpat/libexpat/releases/download/R_2_4_8/expat-2.4.8.tar.bz2 && \
-    echo "a247a7f6bbb21cf2ca81ea4cbb916bfb9717ca523631675f99b3d4a5678dcd16  expat-2.4.8.tar.bz2" | sha256sum -c && \
-    tar -xf expat-2.4.8.tar.bz2 && \
-    rm expat-2.4.8.tar.bz2 && \
-    cd expat-2.4.8 && \
+ARG EXPAT_VERSION="2.6.1"
+ARG EXPAT_HASH="4677d957c0c6cb2a3321101944574c24113b637c7ab1cf0659a27c5babc201fd"
+RUN set -ex && wget https://github.com/libexpat/libexpat/releases/download/R_2_6_1/expat-${EXPAT_VERSION}.tar.bz2 && \
+    echo "${EXPAT_HASH}  expat-${EXPAT_VERSION}.tar.bz2" | sha256sum -c && \
+    tar -xf expat-${EXPAT_VERSION}.tar.bz2 && \
+    rm expat-${EXPAT_VERSION}.tar.bz2 && \
+    cd expat-${EXPAT_VERSION} && \
     ./configure --enable-static --disable-shared --prefix=/usr && \
     make -j${NPROC:-$(nproc)} && \
     make -j${NPROC:-$(nproc)} install
 
 # Build libunbound for static builds
 WORKDIR /tmp
-RUN set -ex && wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.16.1.tar.gz && \
-    echo "2fe4762abccd564a0738d5d502f57ead273e681e92d50d7fba32d11103174e9a  unbound-1.16.1.tar.gz" | sha256sum -c && \
-    tar -xzf unbound-1.16.1.tar.gz && \
-    rm unbound-1.16.1.tar.gz && \
-    cd unbound-1.16.1 && \
+ARG LIBUNBOUND_VERSION="1.19.2"
+ARG LIBUNBOUND_HASH="cc560d345734226c1b39e71a769797e7fdde2265cbb77ebce542704bba489e55"
+RUN set -ex && wget https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION}.tar.gz && \
+    echo "${LIBUNBOUND_HASH}  unbound-${LIBUNBOUND_VERSION}.tar.gz" | sha256sum -c && \
+    tar -xzf unbound-${LIBUNBOUND_VERSION}.tar.gz && \
+    rm unbound-${LIBUNBOUND_VERSION}.tar.gz && \
+    cd unbound-${LIBUNBOUND_VERSION} && \
     ./configure --disable-shared --enable-static --without-pyunbound --with-libexpat=/usr --with-ssl=/usr --with-libevent=no --without-pythonmodule --disable-flto --with-pthreads --with-libunbound-only --with-pic && \
     make -j${NPROC:-$(nproc)} && \
     make -j${NPROC:-$(nproc)} install
@@ -131,8 +135,8 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
 # Begin final image build
-# Select Alpine 3.x for the base image
-FROM alpine:3.16
+# Select Alpine 3 for the base image
+FROM alpine:3
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
