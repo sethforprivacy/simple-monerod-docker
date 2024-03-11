@@ -42,7 +42,7 @@ jobs:
         run: |
           docker run --rm simple-monerod:alpine-test &
           PID=$!
-          sleep 60
+          sleep 30
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
       - 
         name: Build ARMv8 image

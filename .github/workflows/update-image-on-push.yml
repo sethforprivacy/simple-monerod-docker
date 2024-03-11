@@ -62,7 +62,7 @@ jobs:
         run: |
           docker run --rm simple-monerod:alpine-amd64 &
           PID=$!
-          sleep 60
+          sleep 30
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
       - 
         name: Build and push to Docker Hub and GitHub Packages Docker Registry

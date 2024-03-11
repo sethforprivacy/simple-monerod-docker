@@ -61,7 +61,6 @@ RUN set -ex && apk add --update --no-cache \
     curl \
     dev86 \
     doxygen \
-    elfutils-dev \
     eudev-dev \
     file \
     g++ \
@@ -88,7 +87,7 @@ ARG MONERO_COMMIT_HASH
 ARG NPROC
 ARG TARGETARCH
 ENV CFLAGS='-fPIC'
-ENV CXXFLAGS='-fPIC -DELPP_FEATURE_CRASH_LOG'
+ENV CXXFLAGS='-fPIC'
 ENV USE_SINGLE_BUILDDIR 1
 ENV BOOST_DEBUG         1
 
@@ -131,12 +130,12 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
         *) echo "Dockerfile does not support this platform"; exit 1 ;; \
     esac \
     && mkdir -p build/release && cd build/release \
-    && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} ../.. \
+    && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} -D STACK_TRACE=OFF ../.. \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
 # Begin final image build
 # Select Alpine 3 for the base image
-FROM alpine:3
+FROM alpine:3 as final
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
@@ -145,7 +144,6 @@ RUN set -ex && apk --update --no-cache upgrade
 RUN set -ex && apk add --update --no-cache \
     curl \
     ca-certificates \
-    elfutils-dev \
     libsodium \
     ncurses-libs \
     pcsc-lite-libs \
