@@ -2,15 +2,15 @@
 # Alpine specifics from https://github.com/cornfeedhobo/docker-monero/blob/f96711415f97af1fc9364977d1f5f5ecd313aad0/Dockerfile
 
 # Set Monero branch or tag to build
-ARG MONERO_BRANCH=v0.18.3.3
+ARG MONERO_BRANCH=master
 
 # Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
-ARG MONERO_COMMIT_HASH=81d4db08eb75ce5392c65ca6571e7b08e41b7c95
+ARG MONERO_COMMIT_HASH=68ccb9abfe081f2695fd36b17d58adcaf4550efe
 
 # Select Alpine 3 for the build image base
 FROM alpine:3 as build
-LABEL author="seth@sethforprivacy.com" \
-      maintainer="seth@sethforprivacy.com"
+LABEL author="hundehausen" \
+      maintainer="hundehausen"
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
@@ -122,7 +122,7 @@ WORKDIR /monero
 # Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
 RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     --depth 1 --shallow-submodules \
-    https://github.com/monero-project/monero . \
+    https://github.com/spackle-xmr/monero/ . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
     && case ${TARGETARCH:-amd64} in \
         "arm64") CMAKE_ARCH="armv8-a"; CMAKE_BUILD_TAG="linux-armv8" ;; \
@@ -181,13 +181,13 @@ WORKDIR /home/${MONERO_USER}
 COPY --chown=monero:monero --from=build /monero/build/release/bin/monerod /usr/local/bin/monerod
 
 # Expose p2p port
-EXPOSE 18080
+EXPOSE 28080
 
 # Expose restricted RPC port
-EXPOSE 18089
+EXPOSE 28089
 
 # Add HEALTHCHECK against get_info endpoint
-HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:18081/get_height || exit 1
+HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:28081/get_height || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
-CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist"]
+CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=28089", "--testnet", "--max-connections-per-ip=10", "--add-priority-node=95.217.143.178:28080", "--add-priority-node=45.135.180.21:28080", "--add-priority-node=45.135.180.74:28080", "--add-priority-node=185.130.45.183:28080", "--add-priority-node=95.217.143.100:28080", "--add-priority-node=23.145.40.115:28080"]

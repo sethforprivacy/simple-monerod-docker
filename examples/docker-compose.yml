@@ -1,23 +1,26 @@
-version: '3'
-
 services:
   monerod:
-    image: sethsimmons/simple-monerod:latest
+    image: hundehausen/monero-stressnet:latest
     user: ${FIXUID:-1000}:${FIXGID:-1000}
     restart: unless-stopped
     container_name: monerod
     volumes:
       - bitmonero:/home/monero/.bitmonero
     ports:
-      - 18080:18080
-      - 18089:18089
+      - 28080:28080
+      - 28089:28089
     command:
       - "--rpc-restricted-bind-ip=0.0.0.0"
-      - "--rpc-restricted-bind-port=18089"
-      - "--public-node"
-      - "--no-igd"
+      - "--rpc-restricted-bind-port=28089"
+      - "--testnet"
       - "--enable-dns-blocklist"
-      - "--prune-blockchain"
+      - "--max-connections-per-ip=10"
+      - "--add-priority-node=95.217.143.178:28080"
+      - "--add-priority-node=45.135.180.21:28080"
+      - "--add-priority-node=45.135.180.74:28080"
+      - "--add-priority-node=185.130.45.183:28080"
+      - "--add-priority-node=95.217.143.100:28080"
+      - "--add-priority-node=23.145.40.115:28080"
 
   tor:
     image: goldy/tor-hidden-service:latest
@@ -26,7 +29,7 @@ services:
     links:
         - monerod
     environment:
-        MONEROD_TOR_SERVICE_HOSTS: 18089:monerod:18089
+        MONEROD_TOR_SERVICE_HOSTS: 28089:monerod:28089
         MONEROD_TOR_SERVICE_VERSION: '3'
     volumes:
         - tor-keys:/var/lib/tor/hidden_service/

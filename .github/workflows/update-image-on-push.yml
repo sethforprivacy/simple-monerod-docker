@@ -54,13 +54,13 @@ jobs:
           push: false
           load: true
           platforms: linux/amd64
-          tags: simple-monerod:alpine-amd64
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
+          tags: monero-stressnet:alpine-amd64
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/monero-stressnet:latest
           cache-to: type=inline
       - 
         name: Test-run x86_64 image
         run: |
-          docker run --rm simple-monerod:alpine-amd64 &
+          docker run --rm monero-stressnet:alpine-amd64 &
           PID=$!
           sleep 30
           kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
@@ -72,13 +72,13 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository_owner }}/simple-monerod:latest
-            ghcr.io/${{ github.repository_owner }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
-            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
-            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/monero-stressnet:latest
+            ghcr.io/${{ github.repository_owner }}/monero-stressnet:${{ steps.get_tag.outputs.tag }}
+            ${{ secrets.DOCKER_USERNAME }}/monero-stressnet:latest
+            ${{ secrets.DOCKER_USERNAME }}/monero-stressnet:${{ steps.get_tag.outputs.tag }}
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/monero-stressnet:latest
           cache-to: type=inline
