@@ -66,6 +66,7 @@ RUN set -ex && apk add --update --no-cache \
     g++ \
     git \
     graphviz \
+    libsodium \
     libsodium-dev \
     libtool \
     libusb-dev \
@@ -145,6 +146,7 @@ RUN set -ex && apk add --update --no-cache \
     curl \
     ca-certificates \
     libsodium \
+    libsodium-dev \
     ncurses-libs \
     pcsc-lite-libs \
     readline \
@@ -187,7 +189,7 @@ EXPOSE 28080
 EXPOSE 28089
 
 # Add HEALTHCHECK against get_info endpoint
-HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:28081/get_height || exit 1
+HEALTHCHECK --interval=60s --timeout=20s CMD curl --fail http://localhost:28081/get_height || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
 CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=28089", "--testnet", "--max-connections-per-ip=10", "--add-priority-node=95.217.143.178:28080", "--add-priority-node=45.135.180.21:28080", "--add-priority-node=45.135.180.74:28080", "--add-priority-node=185.130.45.183:28080", "--add-priority-node=95.217.143.100:28080", "--add-priority-node=23.145.40.115:28080"]
