@@ -8,7 +8,7 @@ ARG MONERO_BRANCH=v250.18.3.3.2
 ARG MONERO_COMMIT_HASH=16f06553efd035178fbd121e3771417785aad979
 
 # Select Alpine 3 for the build image base
-FROM alpine:3 as build
+FROM alpine:3 AS build
 LABEL author="hundehausen" \
       maintainer="hundehausen"
 
@@ -89,8 +89,8 @@ ARG NPROC
 ARG TARGETARCH
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC'
-ENV USE_SINGLE_BUILDDIR 1
-ENV BOOST_DEBUG         1
+ENV USE_SINGLE_BUILDDIR=1
+ENV BOOST_DEBUG=1
 
 # Build expat, a dependency for libunbound
 ARG EXPAT_VERSION="2.6.1"
@@ -136,7 +136,7 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
 
 # Begin final image build
 # Select Alpine 3 for the base image
-FROM alpine:3 as final
+FROM alpine:3 AS final
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
