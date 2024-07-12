@@ -55,7 +55,7 @@ jobs:
           load: true
           platforms: linux/amd64
           tags: simple-monerod:alpine-amd64
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/simple-monerod:latest
           cache-to: type=inline
       - 
         name: Test-run x86_64 image
