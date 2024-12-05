@@ -8,7 +8,7 @@ ARG MONERO_BRANCH=v0.18.3.4
 ARG MONERO_COMMIT_HASH=b089f9ee69924882c5d14dd1a6991deb05d9d1cd
 
 # Select Alpine 3 for the build image base
-FROM alpine:3 as build
+FROM alpine:3 AS build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -135,7 +135,7 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
 
 # Begin final image build
 # Select Alpine 3 for the base image
-FROM alpine:3 as final
+FROM alpine:3 AS final
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
@@ -179,6 +179,7 @@ USER "${MONERO_USER}:${MONERO_USER}"
 # Switch to home directory and install newly built monerod binary
 WORKDIR /home/${MONERO_USER}
 COPY --chown=monero:monero --from=build /monero/build/release/bin/monerod /usr/local/bin/monerod
+COPY --chown=monero:monero ./ban_list.txt ./ban_list.txt
 
 # Expose p2p port
 EXPOSE 18080
@@ -190,4 +191,4 @@ EXPOSE 18089
 HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:18081/get_height || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
-CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist"]
+CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist", "--ban-list=/home/monero/ban_list.txt"]
