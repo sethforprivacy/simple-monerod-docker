@@ -66,6 +66,7 @@ RUN set -ex && apk add --update --no-cache \
     g++ \
     git \
     graphviz \
+    gnupg \
     libsodium-dev \
     libtool \
     libusb-dev \
@@ -92,9 +93,9 @@ ENV USE_SINGLE_BUILDDIR=1
 ENV BOOST_DEBUG=1
 
 # Build expat, a dependency for libunbound
-ARG EXPAT_VERSION="2.6.1"
-ARG EXPAT_HASH="4677d957c0c6cb2a3321101944574c24113b637c7ab1cf0659a27c5babc201fd"
-RUN set -ex && wget https://github.com/libexpat/libexpat/releases/download/R_2_6_1/expat-${EXPAT_VERSION}.tar.bz2 && \
+ARG EXPAT_VERSION="2.6.4"
+ARG EXPAT_HASH="8dc480b796163d4436e6f1352e71800a774f73dbae213f1860b60607d2a83ada"
+RUN set -ex && wget https://github.com/libexpat/libexpat/releases/download/R_2_6_4/expat-${EXPAT_VERSION}.tar.bz2 && \
     echo "${EXPAT_HASH}  expat-${EXPAT_VERSION}.tar.bz2" | sha256sum -c && \
     tar -xf expat-${EXPAT_VERSION}.tar.bz2 && \
     rm expat-${EXPAT_VERSION}.tar.bz2 && \
@@ -105,8 +106,8 @@ RUN set -ex && wget https://github.com/libexpat/libexpat/releases/download/R_2_6
 
 # Build libunbound for static builds
 WORKDIR /tmp
-ARG LIBUNBOUND_VERSION="1.19.2"
-ARG LIBUNBOUND_HASH="cc560d345734226c1b39e71a769797e7fdde2265cbb77ebce542704bba489e55"
+ARG LIBUNBOUND_VERSION="1.22.0"
+ARG LIBUNBOUND_HASH="c5dd1bdef5d5685b2cedb749158dd152c52d44f65529a34ac15cd88d4b1b3d43"
 RUN set -ex && wget https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION}.tar.gz && \
     echo "${LIBUNBOUND_HASH}  unbound-${LIBUNBOUND_VERSION}.tar.gz" | sha256sum -c && \
     tar -xzf unbound-${LIBUNBOUND_VERSION}.tar.gz && \
@@ -132,6 +133,16 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     && mkdir -p build/release && cd build/release \
     && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} -D STACK_TRACE=OFF ../.. \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
+
+# git pull and validate ban list
+RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
+    && cd monero-ban-list \
+    && wget https://raw.githubusercontent.com/Cuprate/cuprate/7b8756fa80e386fb04173d8220c15c86bf9f9888/misc/gpg_keys/boog900.asc \
+    && wget https://rucknium.me/pgp.txt \
+    && gpg --import boog900.asc \
+    && gpg --import pgp.txt \
+    && gpg --verify --status-fd 1 --verify ./sigs/boog900.sig ban_list.txt 2>/dev/null \
+    && gpg --verify --status-fd 1 --verify ./sigs/Rucknium.sig ban_list.txt 2>/dev/null
 
 # Begin final image build
 # Select Alpine 3 for the base image
@@ -179,7 +190,7 @@ USER "${MONERO_USER}:${MONERO_USER}"
 # Switch to home directory and install newly built monerod binary
 WORKDIR /home/${MONERO_USER}
 COPY --chown=monero:monero --from=build /monero/build/release/bin/monerod /usr/local/bin/monerod
-COPY --chown=monero:monero ./ban_list.txt ./ban_list.txt
+COPY --chown=monero:monero --from=build /monero/monero-ban-list/ban_list.txt ./ban_list.txt
 
 # Expose p2p port
 EXPOSE 18080
