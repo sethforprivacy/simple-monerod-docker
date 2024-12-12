@@ -138,10 +138,11 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
 RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
     && cd monero-ban-list \
     && wget https://raw.githubusercontent.com/Cuprate/cuprate/7b8756fa80e386fb04173d8220c15c86bf9f9888/misc/gpg_keys/boog900.asc \
-    && wget https://rucknium.me/pgp.txt \
+    && wget -O rucknium.asc https://rucknium.me/pgp.txt \
+    || wget -O rucknium.asc https://gist.githubusercontent.com/Rucknium/262526e37732241bb0e676c670b8c60d/raw \
     && wget https://raw.githubusercontent.com/monero-project/monero/004ead1a14d60ff757880c5b16b894b526427829/utils/gpg_keys/jeffro256.asc \
     && gpg --import boog900.asc \
-    && gpg --import pgp.txt \
+    && gpg --import rucknium.asc \
     && gpg --import jeffro256.asc \
     && gpg --verify --status-fd 1 --verify ./sigs/boog900.sig ban_list.txt 2>/dev/null \
     && gpg --verify --status-fd 1 --verify ./sigs/Rucknium.sig ban_list.txt 2>/dev/null \
