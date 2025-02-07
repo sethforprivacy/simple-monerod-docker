@@ -8,77 +8,115 @@ on:
     - 'Dockerfile'
   workflow_dispatch:
 
+env:
+  GHCR_REPO: ghcr.io/${{ github.repository_owner }}/simple-monerod
+
 jobs:
-  rebuild-container:
-    name: "Rebuild Container with the latest base image"
-    runs-on: ubuntu-latest
+  build:
+    name: "Build container for multiple architectures and push by digest"
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
     steps:
-      - 
-        name: Prepare outputs
-        id: prep
+      - name: Prepare platform matrix for arm64
+        if: runner.arch == 'ARM64'
         run: |
-          echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-      - 
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.4.0
+          echo "PLATFORM=linux/arm64" >> $GITHUB_ENV
+          echo "DIGEST_NAME=arm64" >> $GITHUB_ENV
+      - name: Prepare platform matrix for amd64
+        if: runner.arch == 'X64'
+        run: |
+          echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
+          echo "DIGEST_NAME=amd64" >> $GITHUB_ENV
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          platforms: linux/arm64
+          images: |
+            ${{ env.GHCR_REPO }}
       - 
+        name: Get Monero release tag
+        run: echo MONERO_TAG="$(awk -F '=' '/MONERO_BRANCH=/ {print $2}' Dockerfile)" >> $GITHUB_ENV
+      -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.9.0
-      - 
+      -
         name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.3.0 
+        uses: docker/login-action@v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - 
-        name: Login to DockerHub
-        uses: docker/login-action@v3.3.0 
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - 
+      -
         name: Checkout repository
         uses: actions/checkout@v4
-      - 
-        name: Get Monero Release Tag
-        id: get_tag
-        run: echo "::set-output name=tag::$(awk -F '=' '/MONERO_BRANCH=/ {print $2}' Dockerfile)"
-      - 
-        name: Build x86_64 image
-        id: docker_build_amd64
+      -
+        name: Build and and push by digest
         uses: docker/build-push-action@v6.13.0
+        id: build
         with:
-          push: false
-          load: true
-          platforms: linux/amd64
-          tags: simple-monerod:alpine-amd64
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/simple-monerod:latest
-          cache-to: type=inline
-      - 
-        name: Test-run x86_64 image
+          outputs: type=image,"name=${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=true
+          platforms: ${{ env.PLATFORM }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.GHCR_REPO }}:latest
+
+      - name: Export digest
         run: |
-          docker run --rm simple-monerod:alpine-amd64 &
-          PID=$!
-          sleep 30
-          kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
-      - 
-        name: Build and push to Docker Hub and GitHub Packages Docker Registry
-        uses: docker/build-push-action@v6.13.0
-        id: docker_build_push
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
         with:
-          push: true
-          platforms: linux/amd64,linux/arm64
+          name: digests-${{ env.DIGEST_NAME }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.9.0
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.GHCR_REPO }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/simple-monerod:latest
-            ghcr.io/${{ github.repository_owner }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
-            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:latest
-            ${{ secrets.DOCKER_USERNAME }}/simple-monerod:${{ steps.get_tag.outputs.tag }}
-          labels: |
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-            org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/simple-monerod:latest
-          cache-to: type=inline
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ env.MONERO_TAG }}
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.GHCR_REPO }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.GHCR_REPO }}:${{ steps.meta.outputs.version }}
