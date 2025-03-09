@@ -1,14 +1,9 @@
-# Initial base from https://github.com/leonardochaia/docker-monerod/blob/master/src/Dockerfile
-# Alpine specifics from https://github.com/cornfeedhobo/docker-monero/blob/f96711415f97af1fc9364977d1f5f5ecd313aad0/Dockerfile
-
-# Set Monero branch or tag to build
+# renovate: datasource=github-releases depName=monero-project/monero
 ARG MONERO_BRANCH=v0.18.3.4
-
-# Set the proper HEAD commit hash for the given branch/tag in MONERO_BRANCH
 ARG MONERO_COMMIT_HASH=b089f9ee69924882c5d14dd1a6991deb05d9d1cd
 
 # Select Alpine 3 for the build image base
-FROM alpine:3 AS build
+FROM alpine:3.21.3 AS build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -19,6 +14,7 @@ RUN set -ex && apk --update --no-cache upgrade
 RUN set -ex && apk add --update --no-cache \
     autoconf \
     automake \
+    bison \
     boost \
     boost-atomic \
     boost-build \
@@ -63,6 +59,7 @@ RUN set -ex && apk add --update --no-cache \
     doxygen \
     eudev-dev \
     file \
+    flex \
     g++ \
     git \
     graphviz \
@@ -93,25 +90,28 @@ ENV USE_SINGLE_BUILDDIR=1
 ENV BOOST_DEBUG=1
 
 # Build expat, a dependency for libunbound
-ARG EXPAT_VERSION="2.6.4"
-ARG EXPAT_HASH="8dc480b796163d4436e6f1352e71800a774f73dbae213f1860b60607d2a83ada"
-RUN set -ex && wget https://github.com/libexpat/libexpat/releases/download/R_2_6_4/expat-${EXPAT_VERSION}.tar.bz2 && \
-    echo "${EXPAT_HASH}  expat-${EXPAT_VERSION}.tar.bz2" | sha256sum -c && \
-    tar -xf expat-${EXPAT_VERSION}.tar.bz2 && \
-    rm expat-${EXPAT_VERSION}.tar.bz2 && \
-    cd expat-${EXPAT_VERSION} && \
+# renovate: datasource=github-release-attachments depName=libexpat/libexpat versioning=semver-coerced
+ARG EXPAT_VERSION=R_2_6_4
+ARG EXPAT_CHECKSUM=8dc480b796163d4436e6f1352e71800a774f73dbae213f1860b60607d2a83ada
+RUN set -ex && EXPAT_SEMVER="$(echo ${EXPAT_VERSION} | sed 's/R_//;s/_/./g')" && \
+    wget "https://github.com/libexpat/libexpat/releases/download/${EXPAT_VERSION}/expat-${EXPAT_SEMVER}.tar.bz2" && \
+    echo "${EXPAT_CHECKSUM}  expat-${EXPAT_SEMVER}.tar.bz2" | sha256sum -c && \
+    tar -xf expat-${EXPAT_SEMVER}.tar.bz2 && \
+    rm expat-${EXPAT_SEMVER}.tar.bz2 && \
+    cd expat-${EXPAT_SEMVER} && \
     ./configure --enable-static --disable-shared --prefix=/usr && \
     make -j${NPROC:-$(nproc)} && \
     make -j${NPROC:-$(nproc)} install
 
 # Build libunbound for static builds
 WORKDIR /tmp
-ARG LIBUNBOUND_VERSION="1.22.0"
-ARG LIBUNBOUND_HASH="c5dd1bdef5d5685b2cedb749158dd152c52d44f65529a34ac15cd88d4b1b3d43"
-RUN set -ex && wget https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION}.tar.gz && \
-    echo "${LIBUNBOUND_HASH}  unbound-${LIBUNBOUND_VERSION}.tar.gz" | sha256sum -c && \
-    tar -xzf unbound-${LIBUNBOUND_VERSION}.tar.gz && \
-    rm unbound-${LIBUNBOUND_VERSION}.tar.gz && \
+# renovate: datasource=github-release-attachments depName=NLnetLabs/unbound versioning=semver-coerced
+ARG LIBUNBOUND_VERSION=release-1.22.0
+ARG LIBUNBOUND_CHECKSUM=4e32a36d57cda666b1c8ee02185ba73462330452162d1b9c31a5b91a853ba946
+RUN set -ex && wget "https://github.com/NLnetLabs/unbound/archive/refs/tags/${LIBUNBOUND_VERSION}.tar.gz"  && \
+    echo "${LIBUNBOUND_CHECKSUM}" "${LIBUNBOUND_VERSION}.tar.gz" | sha256sum -c && \
+    tar -xzf ${LIBUNBOUND_VERSION}.tar.gz && \
+    rm ${LIBUNBOUND_VERSION}.tar.gz && \
     cd unbound-${LIBUNBOUND_VERSION} && \
     ./configure --disable-shared --enable-static --without-pyunbound --with-libexpat=/usr --with-ssl=/usr --with-libevent=no --without-pythonmodule --disable-flto --with-pthreads --with-libunbound-only --with-pic && \
     make -j${NPROC:-$(nproc)} && \
@@ -152,7 +152,7 @@ RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
 
 # Begin final image build
 # Select Alpine 3 for the base image
-FROM alpine:3 AS final
+FROM alpine:3.21.3 AS final
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
@@ -181,7 +181,8 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 # Install and configure fixuid and switch to MONERO_USER
 ARG MONERO_USER="monero"
 ARG TARGETARCH
-ARG FIXUID_VERSION="0.6.0"
+# renovate: datasource=github-releases depName=boxboat/fixuid
+ARG FIXUID_VERSION=0.6.0
 RUN set -ex && case ${TARGETARCH:-amd64} in \
         "arm64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-arm64.tar.gz | tar -C /usr/local/bin -xzf - ;; \
         "amd64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - ;; \

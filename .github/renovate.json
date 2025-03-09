@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:enableMajor",
+    "mergeConfidence:all-badges",
+    ":disableRateLimiting",
+    ":semanticCommits"
+  ],
+  "rebaseWhen": "conflicted",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["(^|/)Dockerfile$"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sARG .*?_VERSION=(?<currentValue>.*)(\\sARG .*?_CHECKSUM=(?<currentDigest>.*))?\\s",
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sARG .*?_BRANCH=(?<currentValue>.*)(\\sARG .*?_COMMIT_HASH=(?<currentDigest>.*))?\\s"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{versioning}}{{/if}}"
+    }
+  ]
+}
