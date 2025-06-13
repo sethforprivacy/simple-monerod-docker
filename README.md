@@ -4,7 +4,6 @@ A simple and straightforward Dockerized monerod built from source and exposing s
 
 ## Actions
 
-[![Weekly Update Rebuild](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml)  
 [![Latest Dockerfile build on push](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml)  
 
 ## Tags
