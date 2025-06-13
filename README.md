@@ -7,12 +7,6 @@ A simple and straightforward Dockerized monerod built from source and exposing s
 [![Weekly Update Rebuild](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-base-image.yml)  
 [![Latest Dockerfile build on push](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml/badge.svg)](https://github.com/sethforprivacy/simple-monerod-docker/actions/workflows/update-image-on-push.yml)  
 
-## Docker
-
-![Docker Pulls](https://img.shields.io/docker/pulls/sethsimmons/simple-monerod)  
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/sethsimmons/simple-monerod/latest)  
-![Docker Image Version (latest by date)](https://img.shields.io/docker/v/sethsimmons/simple-monerod)  
-
 ## Tags
 
 I will always release the latest Monero version under the `latest` tag as well as the version number tag (i.e. `v0.18.0.0`).
