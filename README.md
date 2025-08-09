@@ -45,6 +45,18 @@ monerod Docker w/ public RPC (pruned):
 sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero ghcr.io/sethforprivacy/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
 ```
 
+## Security: Docker port publishing (0.0.0.0) and UFW
+
+Docker publishes ports on all interfaces by default. If you use `-p` with `docker run` (for example, `-p 18089:18089`) or define `ports:` in `docker-compose.yml` (for example, `- 18089:18089`), Docker binds those ports to `0.0.0.0` unless you explicitly specify a host IP. This makes the service reachable from any network interface on the host.
+
+This can also bypass UFW rules. Docker installs its own iptables rules that accept traffic to published ports before UFW’s filter rules are evaluated. As a result, even if UFW’s default policy is to deny incoming traffic, a published Docker port may still be reachable from the internet.
+
+- If you do not want the restricted RPC exposed publicly, either do not publish it at all or bind it only to localhost:
+  - docker run: `-p 127.0.0.1:18089:18089`
+  - docker-compose.yml: `ports: ["127.0.0.1:18089:18089"]`
+- For a public P2P node, it is normal to publish `18080`. Be deliberate about whether `18089` (restricted RPC) should be public.
+- If you are running this container behind a firewall (e.g. at home behind a NAT router), it's usually okay to bind on 0.0.0.0
+
 ## Running as a different user
 
 In situations where you need the daemon to be run as a different user, I have added [fixuid](https://github.com/boxboat/fixuid) to enable that. Much of the work for this was taken from [docker-monero](https://github.com/cornfeedhobo/docker-monero), and enables you to specify a new user/group in your `docker run` or `docker-compose.yml` file to run as a different user.
