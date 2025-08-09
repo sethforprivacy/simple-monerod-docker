@@ -144,9 +144,9 @@ RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
     && gpg --import boog900.asc \
     && gpg --import rucknium.asc \
     && gpg --import jeffro256.asc \
-    && gpg --verify --status-fd 1 --verify ./sigs/boog900.sig ban_list.txt 2>/dev/null \
-    && gpg --verify --status-fd 1 --verify ./sigs/Rucknium.sig ban_list.txt 2>/dev/null \
-    && gpg --verify --status-fd 1 --verify ./sigs/jeffro256.sig ban_list.txt 2>/dev/null
+    && gpg --verify --status-fd 1 ./sigs/boog900.sig ban_list.txt 2>/dev/null \
+    && gpg --verify --status-fd 1 ./sigs/Rucknium.sig ban_list.txt 2>/dev/null \
+    && gpg --verify --status-fd 1 ./sigs/jeffro256.sig ban_list.txt 2>/dev/null
 
 # Begin final image build
 # Select Alpine 3 for the base image
