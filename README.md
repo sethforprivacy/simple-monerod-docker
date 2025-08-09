@@ -45,6 +45,8 @@ monerod Docker w/ public RPC (pruned):
 sudo docker run -d --restart unless-stopped --name="monerod" -v bitmonero:/home/monero/.bitmonero ghcr.io/sethforprivacy/simple-monerod:latest  --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --public-node --no-igd --no-zmq --enable-dns-blocklist --prune-blockchain
 ```
 
+Learn more about all available options (flags) to configure monerod: [Monerod Reference Options](https://docs.getmonero.org/interacting/monerod-reference/#options)
+
 ## Security: Docker port publishing (0.0.0.0) and UFW
 
 Docker publishes ports on all interfaces by default. If you use `-p` with `docker run` (for example, `-p 18089:18089`) or define `ports:` in `docker-compose.yml` (for example, `- 18089:18089`), Docker binds those ports to `0.0.0.0` unless you explicitly specify a host IP. This makes the service reachable from any network interface on the host.
