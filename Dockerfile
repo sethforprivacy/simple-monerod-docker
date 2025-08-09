@@ -202,7 +202,7 @@ EXPOSE 18080
 # Expose restricted RPC port
 EXPOSE 18089
 
-# Add HEALTHCHECK against get_info endpoint
+# Add HEALTHCHECK against get_height endpoint
 HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://127.0.0.1:18081/get_height || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
