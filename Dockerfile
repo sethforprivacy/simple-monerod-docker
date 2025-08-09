@@ -167,7 +167,7 @@ RUN set -ex && apk add --update --no-cache \
     zeromq
 
 # Add user and setup directories for monerod
-RUN set -ex && adduser -Ds /bin/bash monero \
+RUN set -ex && adduser -Ds /bin/ash monero \
     && mkdir -p /home/monero/.bitmonero \
     && chown -R monero:monero /home/monero/.bitmonero
 
