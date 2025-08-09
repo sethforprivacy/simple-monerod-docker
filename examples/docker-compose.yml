@@ -16,6 +16,7 @@ services:
       - "--no-igd"
       - "--enable-dns-blocklist"
       - "--prune-blockchain"
+      - "--ban-list=/home/monero/ban_list.txt"
 
   tor:
     image: goldy/tor-hidden-service:latest
