@@ -52,7 +52,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Build and and push by digest
         uses: docker/build-push-action@v6.18.0
@@ -101,7 +101,7 @@ jobs:
         uses: docker/setup-buildx-action@v3.11.1
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Get Monero release tag
         run: echo MONERO_TAG="$(awk -F '=' '/MONERO_BRANCH=/ {print $2}' Dockerfile)" >> $GITHUB_ENV
