@@ -3,7 +3,7 @@ ARG MONERO_BRANCH=v0.18.4.3
 ARG MONERO_COMMIT_HASH=09f5cbbb98e63f0c6bd87c3d7d9a80448284c35c
 
 # Select Alpine 3 for the build image base
-FROM alpine:3.22.1 AS build
+FROM alpine:3.22.2 AS build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -150,7 +150,7 @@ RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
 
 # Begin final image build
 # Select Alpine 3 for the base image
-FROM alpine:3.22.1 AS final
+FROM alpine:3.22.2 AS final
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
