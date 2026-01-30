@@ -19,19 +19,18 @@ services:
       - "--ban-list=/home/monero/ban_list.txt"
 
   tor:
-    image: goldy/tor-hidden-service:latest
+    image: ghcr.io/hundehausen/tor-hidden-service:latest
     container_name: tor
     restart: unless-stopped
     links:
         - monerod
     environment:
-        MONEROD_TOR_SERVICE_HOSTS: 18089:monerod:18089
-        MONEROD_TOR_SERVICE_VERSION: '3'
+      - HS_MONEROD_TOR_SERVICE_HOSTS=monerod:18089:18089 # Format: HS_[NAME]=[HOST]:[PORT]:[VIRTUAL_PORT]
     volumes:
-        - tor-keys:/var/lib/tor/hidden_service/
+        - tor-keys:/var/lib/tor
 
   watchtower:
-    image: containrrr/watchtower:latest
+    image: ghcr.io/nicholas-fedor/watchtower:latest
     container_name: watchtower
     restart: unless-stopped
     volumes:
