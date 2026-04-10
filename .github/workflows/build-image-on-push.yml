@@ -44,7 +44,7 @@ jobs:
       -
         name: Test build of image
         id: build
-        uses: docker/build-push-action@v7.0.0
+        uses: docker/build-push-action@v7.1.0
         with:
           push: false
           load: true
