@@ -1,6 +1,6 @@
 # renovate: datasource=github-releases depName=monero-project/monero
-ARG MONERO_BRANCH=v0.18.4.6
-ARG MONERO_COMMIT_HASH=dbcc7d212c094bd1a45f7291dbb99a4b4627a96d
+ARG MONERO_BRANCH=v0.18.5.0
+ARG MONERO_COMMIT_HASH=3ca4c30f73fe22d16a46cfba122556437da3618d
 
 # Select Alpine 3 for the build image base
 FROM alpine:3.23.4 AS build
