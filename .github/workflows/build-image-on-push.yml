@@ -11,12 +11,25 @@ on:
     - 'Dockerfile'
   workflow_dispatch:
 
+# Least-privilege default token (this workflow only reads the repo and pulls cache)
+permissions:
+  contents: read
+
+# Cancel superseded runs for the same ref to save CI minutes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GHCR_REPO: ghcr.io/${{ github.repository_owner }}/simple-monerod
 
 jobs:
   rebuild-container:
     name: "Build image with cache"
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -35,14 +48,13 @@ jobs:
         run: |
           echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
           echo "DIGEST_NAME=amd64" >> $GITHUB_ENV
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4.1.0
-      -
-        name: Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v7
-      -
-        name: Test build of image
+        with:
+          persist-credentials: false
+      - name: Test build of image
         id: build
         uses: docker/build-push-action@v7.2.0
         with:
@@ -50,11 +62,36 @@ jobs:
           load: true
           platforms: ${{ env.PLATFORM }}
           tags: simple-monerod:testing
-          cache-from: type=registry,ref=${{ env.GHCR_REPO }}:latest
-      - 
-        name: Test-run image
+          cache-from: |
+            type=registry,ref=${{ env.GHCR_REPO }}:buildcache-${{ env.DIGEST_NAME }}
+            type=registry,ref=${{ env.GHCR_REPO }}:latest
+      - name: Verify reported version matches the pinned Monero tag
         run: |
-          docker run --rm simple-monerod:testing &
-          PID=$!
-          sleep 30
-          kill -SIGINT $PID # this will return a non-zero exit code if the container dies early on
+          set -euo pipefail
+          EXPECTED="$(awk -F= '/^ARG MONERO_BRANCH=/{print $2; exit}' Dockerfile)"
+          echo "Expecting monerod to report: ${EXPECTED}"
+          OUT="$(docker run --rm simple-monerod:testing --version || true)"
+          echo "Reported: ${OUT}"
+          echo "${OUT}" | grep -q "${EXPECTED}" \
+            || { echo "::error::monerod --version does not contain expected tag ${EXPECTED}"; exit 1; }
+      - name: Verify the container reaches a healthy state
+        run: |
+          set -uo pipefail
+          CID="$(docker run -d simple-monerod:testing)"
+          status="starting"
+          for i in $(seq 1 40); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' "$CID" 2>/dev/null || echo gone)"
+            echo "attempt ${i}: health=${status}"
+            case "${status}" in
+              healthy) break ;;
+              unhealthy|gone)
+                echo "::error::container became ${status}"; docker logs "$CID" || true
+                docker rm -f "$CID" >/dev/null 2>&1 || true; exit 1 ;;
+            esac
+            sleep 5
+          done
+          if [ "${status}" != "healthy" ]; then
+            echo "::error::healthcheck did not pass within timeout"; docker logs "$CID" || true
+            docker rm -f "$CID" >/dev/null 2>&1 || true; exit 1
+          fi
+          docker rm -f "$CID" >/dev/null 2>&1 || true
