@@ -71,7 +71,7 @@ jobs:
           persist-credentials: false
 
       - name: Build and push by digest
-        uses: docker/build-push-action@v7.2.0
+        uses: docker/build-push-action@v7.3.0
         id: build
         with:
           outputs: type=image,"name=${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=true
