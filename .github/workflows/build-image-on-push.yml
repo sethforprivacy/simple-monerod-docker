@@ -56,7 +56,7 @@ jobs:
           persist-credentials: false
       - name: Test build of image
         id: build
-        uses: docker/build-push-action@v7.2.0
+        uses: docker/build-push-action@v7.3.0
         with:
           push: false
           load: true
