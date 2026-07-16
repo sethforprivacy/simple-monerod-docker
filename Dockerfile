@@ -175,6 +175,9 @@ RUN set -ex && adduser -Ds /bin/ash monero \
 COPY --chmod=0755 entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
 
+# Copy healthcheck script
+COPY --chmod=0755 healthcheck.sh /healthcheck.sh
+
 # Install and configure fixuid and switch to MONERO_USER
 ARG MONERO_USER="monero"
 ARG TARGETARCH
@@ -209,8 +212,8 @@ EXPOSE 18080
 # Expose restricted RPC port
 EXPOSE 18089
 
-# Add HEALTHCHECK against get_height endpoint
-HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://127.0.0.1:18081/get_height || exit 1
+# Add HEALTHCHECK against get_height endpoint, honoring --rpc-login credentials if set
+HEALTHCHECK --interval=30s --timeout=5s CMD /healthcheck.sh || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
 CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist", "--ban-list=/home/monero/ban_list.txt"]
