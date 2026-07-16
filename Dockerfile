@@ -178,13 +178,20 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 # Install and configure fixuid and switch to MONERO_USER
 ARG MONERO_USER="monero"
 ARG TARGETARCH
+# Checksums must be updated manually when bumping FIXUID_VERSION (upstream publishes no checksum file)
+ARG FIXUID_AMD64_CHECKSUM=8c47f64ec4eec60e79871796ea4097ead919f7fcdedace766da9510b78c5fa14
+ARG FIXUID_ARM64_CHECKSUM=827e0b480c38470b5defb84343be7bb4e85b9efcbf3780ac779374e8b040a969
 # renovate: datasource=github-releases depName=boxboat/fixuid
 ARG FIXUID_VERSION=0.6.0
 RUN set -ex && case ${TARGETARCH:-amd64} in \
-        "arm64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-arm64.tar.gz | tar -C /usr/local/bin -xzf - ;; \
-        "amd64") curl -SsL https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - ;; \
+        "arm64") FIXUID_ARCH="arm64"; FIXUID_CHECKSUM="${FIXUID_ARM64_CHECKSUM}" ;; \
+        "amd64") FIXUID_ARCH="amd64"; FIXUID_CHECKSUM="${FIXUID_AMD64_CHECKSUM}" ;; \
         *) echo "Dockerfile does not support this platform"; exit 1 ;; \
     esac && \
+    curl -SsL -o /tmp/fixuid.tar.gz "https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-${FIXUID_ARCH}.tar.gz" && \
+    echo "${FIXUID_CHECKSUM}  /tmp/fixuid.tar.gz" | sha256sum -c && \
+    tar -C /usr/local/bin -xzf /tmp/fixuid.tar.gz && \
+    rm /tmp/fixuid.tar.gz && \
     chown root:root /usr/local/bin/fixuid && \
     chmod 4755 /usr/local/bin/fixuid && \
     mkdir -p /etc/fixuid && \
