@@ -3,6 +3,7 @@
   "extends": [
     "config:recommended",
     "docker:enableMajor",
+    "helpers:pinGitHubActionDigests",
     "mergeConfidence:all-badges",
     ":disableRateLimiting",
     ":semanticCommits"
