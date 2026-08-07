@@ -66,8 +66,8 @@ The example `docker-compose.yml` applies what hardening is compatible with this 
 | Setting | Effect |
 |---------|--------|
 | `cap_drop: [ALL]` + `cap_add` of the six capabilities fixuid needs | the container starts with only `CHOWN, FOWNER, DAC_OVERRIDE, SETUID, SETGID, SETPCAP`; once fixuid drops to the unprivileged user, the daemon runs with **zero effective capabilities** |
-| `memswap_limit: 4G` (equal to `memory: 4G`) | a memory-pressure attack cannot spill the node's working set into host swap (Docker would otherwise allow 2x the memory limit) |
-| `pids_limit: 512` | bounds processes/threads in the container |
+| `memswap_limit` equal to `memory` (default `MONEROD_MEM_LIMIT=8G`) | a memory-pressure attack cannot spill the node's working set into host swap (Docker would otherwise allow 2x the memory limit). Both are driven by one knob so they always stay equal; raise `MONEROD_MEM_LIMIT` on hosts with more RAM — the zero-swap property holds at any value, and the lmdb page-cache window the node gets is charged to the cgroup, so more headroom helps sync/verify on big machines |
+| `pids_limit` (default `MONEROD_PIDS_LIMIT=512`) | bounds processes/threads in the container (monerod spawns a thread per P2P connection; a syncing node uses ~30) |
 | `--max-log-file-size=10000000 --max-log-files=7` (also baked into the image's default `CMD`) | caps log file writes — which land in the data volume, i.e. host disk — at 7 × 10 MB instead of monerod's 100 MB × 50 default |
 
 What is **not** applied, and why: this container starts every daemon through `fixuid`, a setuid-root binary that remaps the `monero` user to your host uid (or the owner of the data volume) by rewriting `/etc/passwd` and chowning the volume on first start. That makes three otherwise-standard hardening flags unsafe here:

@@ -39,12 +39,21 @@ services:
       - SETUID
       - SETGID
       - SETPCAP
-    memswap_limit: 4G
+    # Bound total memory AND swap with a single knob so they stay equal: that
+    # keeps host swap out of reach (Docker would otherwise allow 2x the memory
+    # limit in swap). monerod's resident footprint is ~1-3 GB, but on hosts
+    # with more RAM the page-cache window for the lmdb chain data (which is
+    # charged to the cgroup) grows with the limit and speeds up sync/verify,
+    # so raise MONEROD_MEM_LIMIT on big machines. 8 G is safe even on hosts
+    # with little RAM (a limit above available memory is a no-op).
+    memswap_limit: ${MONEROD_MEM_LIMIT:-8G}
     deploy:
       resources:
         limits:
-          memory: 4G
-          pids: 512
+          memory: ${MONEROD_MEM_LIMIT:-8G}
+          # monerod spawns a thread per P2P connection; observed ~30 pids on a
+          # syncing node, 512 leaves ample headroom for a busy public node.
+          pids: ${MONEROD_PIDS_LIMIT:-512}
 
   tor:
     image: ghcr.io/hundehausen/tor-hidden-service:latest
