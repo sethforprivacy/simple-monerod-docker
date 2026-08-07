@@ -17,6 +17,34 @@ services:
       - "--enable-dns-blocklist"
       - "--prune-blockchain"
       - "--ban-list=/home/monero/ban_list.txt"
+      # Bound log file writes (inside the data volume, i.e. host disk):
+      # 10 MB per file, 7 rotated files max instead of monerod's 100 MB x 50.
+      - "--max-log-file-size=10000000"
+      - "--max-log-files=7"
+    # Hardening: the container must keep fixuid working — it is a setuid-root
+    # helper that remaps the monero user to your host uid on every start
+    # (see README "Running as a different user"). That forbids three otherwise-
+    # standard flags: `no-new-privileges` (blocks fixuid's setuid exec),
+    # `read_only: true` (fixuid rewrites /etc/passwd and /var/run), and a full
+    # `cap_drop: [ALL]` (fixuid needs a few capabilities). Instead we drop every
+    # capability except the ones fixuid requires and bound memory/swap/pids.
+    # The daemon itself ends up with zero effective capabilities once fixuid
+    # drops to the unprivileged user.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+      - DAC_OVERRIDE
+      - SETUID
+      - SETGID
+      - SETPCAP
+    memswap_limit: 4G
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          pids: 512
 
   tor:
     image: ghcr.io/hundehausen/tor-hidden-service:latest

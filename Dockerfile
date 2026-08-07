@@ -216,4 +216,7 @@ EXPOSE 18089
 HEALTHCHECK --interval=30s --timeout=5s CMD /healthcheck.sh || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
-CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist", "--ban-list=/home/monero/ban_list.txt"]
+# Logs are written to the data directory, which lives on the Docker host's
+# disk via the volume. Cap them so a busy node can't pile up 100 MB x 50
+# rotated files there (monerod's defaults); override with any --log-* flag.
+CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist", "--ban-list=/home/monero/ban_list.txt", "--max-log-file-size=10000000", "--max-log-files=7"]

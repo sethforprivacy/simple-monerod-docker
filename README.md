@@ -59,6 +59,25 @@ This can also bypass UFW rules. Docker installs its own iptables rules that acce
 - For a public P2P node, it is normal to publish `18080`. Be deliberate about whether `18089` (restricted RPC) should be public.
 - If you are running this container behind a firewall (e.g. at home behind a NAT router), it's usually okay to bind on 0.0.0.0
 
+## Security: hardened container runtime
+
+The example `docker-compose.yml` applies what hardening is compatible with this image's [fixuid](https://github.com/boxboat/fixuid)-based runtime:
+
+| Setting | Effect |
+|---------|--------|
+| `cap_drop: [ALL]` + `cap_add` of the six capabilities fixuid needs | the container starts with only `CHOWN, FOWNER, DAC_OVERRIDE, SETUID, SETGID, SETPCAP`; once fixuid drops to the unprivileged user, the daemon runs with **zero effective capabilities** |
+| `memswap_limit: 4G` (equal to `memory: 4G`) | a memory-pressure attack cannot spill the node's working set into host swap (Docker would otherwise allow 2x the memory limit) |
+| `pids_limit: 512` | bounds processes/threads in the container |
+| `--max-log-file-size=10000000 --max-log-files=7` (also baked into the image's default `CMD`) | caps log file writes — which land in the data volume, i.e. host disk — at 7 × 10 MB instead of monerod's 100 MB × 50 default |
+
+What is **not** applied, and why: this container starts every daemon through `fixuid`, a setuid-root binary that remaps the `monero` user to your host uid (or the owner of the data volume) by rewriting `/etc/passwd` and chowning the volume on first start. That makes three otherwise-standard hardening flags unsafe here:
+
+- `no-new-privileges: true` — blocks fixuid's setuid execution (fixuid exits, container fails).
+- `read_only: true` — fixuid must write `/etc/passwd` and `/var/run/fixuid.ran` on the root filesystem.
+- `cap_drop: [ALL]` (complete) — fixuid's remapping needs `CHOWN`/`DAC_OVERRIDE`/`SETUID`/`SETGID` etc.
+
+All three were tested against a running container: each makes the container exit at startup, so they must stay off while fixuid is in the entrypoint.
+
 ## Running as a different user
 
 In situations where you need the daemon to be run as a different user, I have added [fixuid](https://github.com/boxboat/fixuid) to enable that. Much of the work for this was taken from [docker-monero](https://github.com/cornfeedhobo/docker-monero), and enables you to specify a new user/group in your `docker run` or `docker-compose.yml` file to run as a different user.
