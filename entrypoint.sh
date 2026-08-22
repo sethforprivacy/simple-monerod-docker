@@ -6,10 +6,10 @@ set -e
 # Set require --non-interactive flag
 set -- "monerod" "--non-interactive" "$@"
 
-# Configure NUMA if present for improved performance
-if command -v numactl >/dev/null 2>&1; then
-    numa="numactl --interleave=all"
-    set -- "$numa" "$@"
+# Configure NUMA interleaving only when the kernel actually supports it:
+# numactl exits nonzero on non-NUMA systems, which would kill the container.
+if command -v numactl >/dev/null 2>&1 && numactl --show >/dev/null 2>&1; then
+    set -- numactl --interleave=all "$@"
 fi
 # Start the daemon using fixuid
 # to adjust permissions if needed

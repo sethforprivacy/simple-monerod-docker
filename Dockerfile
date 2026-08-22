@@ -161,6 +161,7 @@ RUN set -ex && apk add --update --no-cache \
     ca-certificates \
     libsodium \
     ncurses-libs \
+    numactl-tools \
     pcsc-lite-libs \
     readline \
     tzdata \
