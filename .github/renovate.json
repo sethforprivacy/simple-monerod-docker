@@ -8,8 +8,16 @@
     ":disableRateLimiting",
     ":semanticCommits"
   ],
-  "rebaseWhen": "conflicted",
+  "packageRules": [
+    {
+      "description": "Auto-merge low-risk GitHub Actions and base-image updates once checks pass",
+      "matchManagers": ["github-actions", "docker"],
+      "matchUpdateTypes": ["digest", "pinDigest", "patch", "minor"],
+      "automerge": true
+    }
+  ],
   "customManagers": [
+
     {
       "customType": "regex",
       "managerFilePatterns": [
