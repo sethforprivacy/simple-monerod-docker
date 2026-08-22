@@ -1,0 +1,9 @@
+# VCS and CI metadata
+.git
+.github
+.claude
+
+# Docs and local examples — not part of the image build
+README.md
+LICENSE
+examples/

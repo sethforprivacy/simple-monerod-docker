@@ -12,60 +12,28 @@ RUN set -ex && apk --update --no-cache upgrade
 
 # Install all dependencies for a static build
 RUN set -ex && apk add --update --no-cache \
-    autoconf \
-    automake \
-    bison \
-    boost \
     boost-atomic \
-    boost-build \
-    boost-build-doc \
     boost-chrono \
-    boost-container \
-    boost-context \
-    boost-contract \
-    boost-coroutine \
     boost-date_time \
     boost-dev \
-    boost-doc \
-    boost-fiber \
     boost-filesystem \
-    boost-graph \
-    boost-iostreams \
-    boost-libs \
-    boost-locale \
-    boost-log \
-    boost-log_setup \
-    boost-math \
-    boost-prg_exec_monitor \
     boost-program_options \
-    boost-python3 \
     boost-random \
     boost-regex \
     boost-serialization \
-    boost-stacktrace_basic \
-    boost-stacktrace_noop \
     boost-static \
     boost-system \
     boost-thread \
-    boost-timer \
-    boost-type_erasure \
-    boost-unit_test_framework \
-    boost-wave \
-    boost-wserialization \
+    bison \
     ca-certificates \
     cmake \
-    curl \
-    dev86 \
-    doxygen \
     eudev-dev \
     file \
     flex \
     g++ \
     git \
-    graphviz \
     gnupg \
     libsodium-dev \
-    libtool \
     libusb-dev \
     linux-headers \
     make \
@@ -86,8 +54,6 @@ ARG NPROC
 ARG TARGETARCH
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC'
-ENV USE_SINGLE_BUILDDIR=1
-ENV BOOST_DEBUG=1
 
 # Build expat, a dependency for libunbound
 # renovate: datasource=github-release-attachments depName=libexpat/libexpat versioning=semver-coerced
@@ -134,6 +100,9 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} -D STACK_TRACE=OFF ../.. \
     && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
 
+# Strip debug symbols from the shipped binary (STACK_TRACE=OFF, so none needed)
+RUN set -ex && strip --strip-unneeded /monero/build/release/bin/monerod
+
 # git pull and validate ban list
 RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
     && cd monero-ban-list \
@@ -162,7 +131,6 @@ RUN set -ex && apk add --update --no-cache \
     libsodium \
     ncurses-libs \
     numactl-tools \
-    pcsc-lite-libs \
     readline \
     su-exec \
     tzdata \
