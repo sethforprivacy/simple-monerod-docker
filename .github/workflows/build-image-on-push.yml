@@ -4,11 +4,15 @@ on:
   push:
     paths:
     - 'Dockerfile'
+    - 'entrypoint.sh'
+    - 'healthcheck.sh'
     branches-ignore:
     - main
   pull_request:
     paths:
     - 'Dockerfile'
+    - 'entrypoint.sh'
+    - 'healthcheck.sh'
   workflow_dispatch:
 
 # Least-privilege default token (this workflow only reads the repo and pulls cache)
@@ -41,19 +45,39 @@ jobs:
       - name: Prepare platform matrix for arm64
         if: runner.arch == 'ARM64'
         run: |
-          echo "PLATFORM=linux/arm64" >> $GITHUB_ENV
-          echo "DIGEST_NAME=arm64" >> $GITHUB_ENV
+          echo "PLATFORM=linux/arm64" >> "$GITHUB_ENV"
+          echo "DIGEST_NAME=arm64" >> "$GITHUB_ENV"
       - name: Prepare platform matrix for amd64
         if: runner.arch == 'X64'
         run: |
-          echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
-          echo "DIGEST_NAME=amd64" >> $GITHUB_ENV
+          echo "PLATFORM=linux/amd64" >> "$GITHUB_ENV"
+          echo "DIGEST_NAME=amd64" >> "$GITHUB_ENV"
       - name: Set up Docker Buildx
+        id: buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Cache compiler objects
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: monero-ccache
+        with:
+          path: ccache-monero
+          key: ccache-monero-${{ env.DIGEST_NAME }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-monero-${{ env.DIGEST_NAME }}-
+
+      # BuildKit cache mounts are not persisted by registry/GHA layer caches;
+      # this seeds restored objects into the /ccache mount and extracts them
+      # again when the job finishes.
+      - name: Seed compiler cache into the build
+        uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-dir: ccache-monero
+          dockerfile: Dockerfile
+          skip-extraction: ${{ steps.monero-ccache.outputs.cache-hit }}
       - name: Test build of image
         id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -65,33 +89,7 @@ jobs:
           cache-from: |
             type=registry,ref=${{ env.GHCR_REPO }}:buildcache-${{ env.DIGEST_NAME }}
             type=registry,ref=${{ env.GHCR_REPO }}:latest
-      - name: Verify reported version matches the pinned Monero tag
-        run: |
-          set -euo pipefail
-          EXPECTED="$(awk -F= '/^ARG MONERO_BRANCH=/{print $2; exit}' Dockerfile)"
-          echo "Expecting monerod to report: ${EXPECTED}"
-          OUT="$(docker run --rm simple-monerod:testing --version || true)"
-          echo "Reported: ${OUT}"
-          echo "${OUT}" | grep -q "${EXPECTED}" \
-            || { echo "::error::monerod --version does not contain expected tag ${EXPECTED}"; exit 1; }
-      - name: Verify the container reaches a healthy state
-        run: |
-          set -uo pipefail
-          CID="$(docker run -d simple-monerod:testing)"
-          status="starting"
-          for i in $(seq 1 40); do
-            status="$(docker inspect -f '{{.State.Health.Status}}' "$CID" 2>/dev/null || echo gone)"
-            echo "attempt ${i}: health=${status}"
-            case "${status}" in
-              healthy) break ;;
-              unhealthy|gone)
-                echo "::error::container became ${status}"; docker logs "$CID" || true
-                docker rm -f "$CID" >/dev/null 2>&1 || true; exit 1 ;;
-            esac
-            sleep 5
-          done
-          if [ "${status}" != "healthy" ]; then
-            echo "::error::healthcheck did not pass within timeout"; docker logs "$CID" || true
-            docker rm -f "$CID" >/dev/null 2>&1 || true; exit 1
-          fi
-          docker rm -f "$CID" >/dev/null 2>&1 || true
+      - name: Smoke-test built image
+        uses: ./.github/actions/smoke-test
+        with:
+          image-ref: simple-monerod:testing

@@ -61,12 +61,20 @@ This can also bypass UFW rules. Docker installs its own iptables rules that acce
 
 ## Running as a different user
 
-In situations where you need the daemon to be run as a different user, I have added [fixuid](https://github.com/boxboat/fixuid) to enable that. Much of the work for this was taken from [docker-monero](https://github.com/cornfeedhobo/docker-monero), and enables you to specify a new user/group in your `docker run` or `docker-compose.yml` file to run as a different user.
+The container starts as root only briefly: the entrypoint normalizes ownership of the data directory (`/home/monero/.bitmonero`), then drops all privileges and runs the daemon as an unprivileged user via [su-exec](https://github.com/ncopa/su-exec). By default the daemon runs as UID/GID 1000 (the built-in `monero` user).
 
-- In `docker run` commands, you can specify the user like this: `--user 1000:1000`
-- In `docker-compose.yml` files, you can specify the user like this: `user: ${FIXUID:-1000}:${FIXGID:-1000}`
+To run as a different UID/GID — for example when the data directory lives on an NFS mount or a Synology NAS owned by another host user — set the `PUID` and `PGID` environment variables:
 
-A great use-case for this is running with the daemon's files stored on an NFS mount, or running monerod on a Synology NAS.
+- In `docker run` commands: `-e PUID=1001 -e PGID=1001`
+- In `docker-compose.yml` files:
+
+```yaml
+environment:
+  - PUID=${FIXUID:-1000}
+  - PGID=${FIXGID:-1000}
+```
+
+The entrypoint re-owns the data directory to match before starting the daemon, so existing volumes are migrated automatically on first start. Unlike the previous fixuid-based setup, the image contains no setuid binaries and is compatible with `security-opt: ["no-new-privileges:true"]`.
 
 ## Copyrights
 

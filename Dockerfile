@@ -12,60 +12,29 @@ RUN set -ex && apk --update --no-cache upgrade
 
 # Install all dependencies for a static build
 RUN set -ex && apk add --update --no-cache \
-    autoconf \
-    automake \
-    bison \
-    boost \
     boost-atomic \
-    boost-build \
-    boost-build-doc \
     boost-chrono \
-    boost-container \
-    boost-context \
-    boost-contract \
-    boost-coroutine \
     boost-date_time \
     boost-dev \
-    boost-doc \
-    boost-fiber \
     boost-filesystem \
-    boost-graph \
-    boost-iostreams \
-    boost-libs \
-    boost-locale \
-    boost-log \
-    boost-log_setup \
-    boost-math \
-    boost-prg_exec_monitor \
     boost-program_options \
-    boost-python3 \
     boost-random \
     boost-regex \
     boost-serialization \
-    boost-stacktrace_basic \
-    boost-stacktrace_noop \
     boost-static \
     boost-system \
     boost-thread \
-    boost-timer \
-    boost-type_erasure \
-    boost-unit_test_framework \
-    boost-wave \
-    boost-wserialization \
+    bison \
+    ccache \
     ca-certificates \
     cmake \
-    curl \
-    dev86 \
-    doxygen \
     eudev-dev \
     file \
     flex \
     g++ \
     git \
-    graphviz \
     gnupg \
     libsodium-dev \
-    libtool \
     libusb-dev \
     linux-headers \
     make \
@@ -86,9 +55,7 @@ ARG NPROC
 ARG TARGETARCH
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC'
-ENV USE_SINGLE_BUILDDIR=1
-ENV BOOST_DEBUG=1
-
+ENV CCACHE_DIR=/ccache
 # Build expat, a dependency for libunbound
 # renovate: datasource=github-release-attachments depName=libexpat/libexpat versioning=semver-coerced
 ARG EXPAT_VERSION=R_2_6_4
@@ -121,7 +88,7 @@ RUN set -ex && wget "https://github.com/NLnetLabs/unbound/archive/refs/tags/${LI
 WORKDIR /monero
 
 # Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
-RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
+RUN --mount=type=cache,target=/ccache set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     --depth 1 --shallow-submodules \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
@@ -131,8 +98,12 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
         *) echo "Dockerfile does not support this platform"; exit 1 ;; \
     esac \
     && mkdir -p build/release && cd build/release \
-    && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} -D STACK_TRACE=OFF ../.. \
-    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
+    && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} -D STACK_TRACE=OFF -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache ../.. \
+    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon \
+    && ccache -s
+
+# Strip debug symbols from the shipped binary (STACK_TRACE=OFF, so none needed)
+RUN set -ex && strip --strip-unneeded /monero/build/release/bin/monerod
 
 # git pull and validate ban list
 RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
@@ -161,8 +132,9 @@ RUN set -ex && apk add --update --no-cache \
     ca-certificates \
     libsodium \
     ncurses-libs \
-    pcsc-lite-libs \
+    numactl-tools \
     readline \
+    su-exec \
     tzdata \
     zeromq
 
@@ -178,28 +150,10 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 # Copy healthcheck script
 COPY --chmod=0755 healthcheck.sh /healthcheck.sh
 
-# Install and configure fixuid and switch to MONERO_USER
+# Pin HOME so the daemon's default data dir remains /home/monero/.bitmonero;
+# the entrypoint drops privileges to this user (or PUID/PGID) via su-exec.
 ARG MONERO_USER="monero"
-ARG TARGETARCH
-# Checksums must be updated manually when bumping FIXUID_VERSION (upstream publishes no checksum file)
-ARG FIXUID_AMD64_CHECKSUM=8c47f64ec4eec60e79871796ea4097ead919f7fcdedace766da9510b78c5fa14
-ARG FIXUID_ARM64_CHECKSUM=827e0b480c38470b5defb84343be7bb4e85b9efcbf3780ac779374e8b040a969
-# renovate: datasource=github-releases depName=boxboat/fixuid
-ARG FIXUID_VERSION=0.6.0
-RUN set -ex && case ${TARGETARCH:-amd64} in \
-        "arm64") FIXUID_ARCH="arm64"; FIXUID_CHECKSUM="${FIXUID_ARM64_CHECKSUM}" ;; \
-        "amd64") FIXUID_ARCH="amd64"; FIXUID_CHECKSUM="${FIXUID_AMD64_CHECKSUM}" ;; \
-        *) echo "Dockerfile does not support this platform"; exit 1 ;; \
-    esac && \
-    curl -SsL -o /tmp/fixuid.tar.gz "https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-${FIXUID_ARCH}.tar.gz" && \
-    echo "${FIXUID_CHECKSUM}  /tmp/fixuid.tar.gz" | sha256sum -c && \
-    tar -C /usr/local/bin -xzf /tmp/fixuid.tar.gz && \
-    rm /tmp/fixuid.tar.gz && \
-    chown root:root /usr/local/bin/fixuid && \
-    chmod 4755 /usr/local/bin/fixuid && \
-    mkdir -p /etc/fixuid && \
-    printf "user: ${MONERO_USER}\ngroup: ${MONERO_USER}\n" > /etc/fixuid/config.yml
-USER "${MONERO_USER}:${MONERO_USER}"
+ENV HOME="/home/${MONERO_USER}"
 
 # Switch to home directory and install newly built monerod binary
 WORKDIR /home/${MONERO_USER}
@@ -213,7 +167,7 @@ EXPOSE 18080
 EXPOSE 18089
 
 # Add HEALTHCHECK against get_height endpoint, honoring --rpc-login credentials if set
-HEALTHCHECK --interval=30s --timeout=5s CMD /healthcheck.sh || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s CMD /healthcheck.sh || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
 CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist", "--ban-list=/home/monero/ban_list.txt"]

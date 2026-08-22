@@ -1,0 +1,62 @@
+name: "Lint"
+
+on:
+  push:
+    paths:
+    - 'Dockerfile'
+    - 'entrypoint.sh'
+    - 'healthcheck.sh'
+    - '.github/workflows/**'
+    branches-ignore:
+    - main
+  pull_request:
+    paths:
+    - 'Dockerfile'
+    - 'entrypoint.sh'
+    - 'healthcheck.sh'
+    - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    name: "shellcheck"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run shellcheck
+        run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:v0.10.0 /mnt/entrypoint.sh /mnt/healthcheck.sh
+
+  hadolint:
+    name: "hadolint"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Only errors fail; warnings/infos (DL3003, DL3018, DL4006, ...) stay visible but non-blocking
+      - name: Run hadolint
+        run: docker run --rm -i hadolint/hadolint:v2.12.0 hadolint --failure-threshold error - < Dockerfile
+
+  actionlint:
+    name: "actionlint"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run actionlint
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7

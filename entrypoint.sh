@@ -1,16 +1,30 @@
 #!/bin/sh
-# Credit for the bulk of this entrypoint script goes to cornfeedhobo
-# Source is https://github.com/cornfeedhobo/docker-monero/blob/master/entrypoint.sh
 set -e
 
-# Set require --non-interactive flag
+# Default to the built-in monero user's UID/GID; override for
+# bind-mount/NAS setups where the data directory is owned elsewhere.
+PUID="${PUID:-1000}"
+PGID="${PGID:-1000}"
+
+# Require --non-interactive so monerod stays attached as PID 1 and logs to stdout
 set -- "monerod" "--non-interactive" "$@"
 
-# Configure NUMA if present for improved performance
-if command -v numactl >/dev/null 2>&1; then
-    numa="numactl --interleave=all"
-    set -- "$numa" "$@"
+# Configure NUMA interleaving only when the kernel actually supports it:
+# numactl exits nonzero on non-NUMA systems, which would kill the container.
+if command -v numactl >/dev/null 2>&1 && numactl --show >/dev/null 2>&1; then
+    set -- numactl --interleave=all "$@"
 fi
-# Start the daemon using fixuid
-# to adjust permissions if needed
-exec fixuid -q "$@"
+
+# When started as root (the image default), normalize data-dir ownership for
+# the requested UID/GID, then drop all privileges for the daemon itself.
+if [ "$(id -u)" = "0" ]; then
+    DATA_DIR="/home/monero/.bitmonero"
+    CUR_UID="$(stat -c %u "$DATA_DIR" 2>/dev/null || echo "")"
+    CUR_GID="$(stat -c %g "$DATA_DIR" 2>/dev/null || echo "")"
+    if [ "${CUR_UID}" != "${PUID}" ] || [ "${CUR_GID}" != "${PGID}" ]; then
+        chown -R "${PUID}:${PGID}" "$DATA_DIR"
+    fi
+    set -- su-exec "${PUID}:${PGID}" "$@"
+fi
+
+exec "$@"
