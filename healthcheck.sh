@@ -16,7 +16,11 @@ get_arg() {
 }
 
 RPC_LOGIN="$(get_arg --rpc-login)"
-RPC_PORT="$(get_arg --rpc-bind-port)"
+# Prefer the restricted RPC port (the surface users actually publish),
+# falling back to the main RPC port. monerod's main RPC always listens on
+# 127.0.0.1:18081 by default, so the fallback covers default deployments.
+RPC_PORT="$(get_arg --rpc-restricted-bind-port)"
+[ -n "${RPC_PORT}" ] || RPC_PORT="$(get_arg --rpc-bind-port)"
 RPC_URL="http://127.0.0.1:${RPC_PORT:-18081}/get_height"
 
 if [ -n "${RPC_LOGIN}" ]; then

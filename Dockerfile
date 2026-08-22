@@ -167,7 +167,7 @@ EXPOSE 18080
 EXPOSE 18089
 
 # Add HEALTHCHECK against get_height endpoint, honoring --rpc-login credentials if set
-HEALTHCHECK --interval=30s --timeout=5s CMD /healthcheck.sh || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s CMD /healthcheck.sh || exit 1
 
 # Start monerod with sane defaults that are overridden by user input (if applicable)
 CMD ["--rpc-restricted-bind-ip=0.0.0.0", "--rpc-restricted-bind-port=18089", "--no-igd", "--no-zmq", "--enable-dns-blocklist", "--ban-list=/home/monero/ban_list.txt"]
