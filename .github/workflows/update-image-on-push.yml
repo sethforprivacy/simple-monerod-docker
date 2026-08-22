@@ -116,6 +116,9 @@ jobs:
           ignore-unfixed: true
           severity: CRITICAL,HIGH
           scan-type: image
+          # Each matrix job pushes a single-arch index (image + attestations);
+          # trivy defaults to linux/amd64 and fatals on the arm64 index.
+          options: --platform linux/${{ env.DIGEST_NAME }}
 
       # Smoke-test the exact artifact that was just pushed, BEFORE the merge job
       # tags it `latest`. If this fails, the merge job (needs: build) never runs.
