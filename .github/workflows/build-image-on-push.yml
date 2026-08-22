@@ -4,11 +4,15 @@ on:
   push:
     paths:
     - 'Dockerfile'
+    - 'entrypoint.sh'
+    - 'healthcheck.sh'
     branches-ignore:
     - main
   pull_request:
     paths:
     - 'Dockerfile'
+    - 'entrypoint.sh'
+    - 'healthcheck.sh'
   workflow_dispatch:
 
 # Least-privilege default token (this workflow only reads the repo and pulls cache)

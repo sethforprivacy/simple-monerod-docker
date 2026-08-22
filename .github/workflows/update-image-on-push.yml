@@ -6,6 +6,8 @@ on:
     - main
     paths:
     - 'Dockerfile'
+    - 'entrypoint.sh'
+    - 'healthcheck.sh'
   workflow_dispatch:
 
 # Least-privilege default; jobs that push opt into packages: write below
