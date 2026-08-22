@@ -1,7 +1,9 @@
 services:
   monerod:
     image: ghcr.io/sethforprivacy/simple-monerod:latest
-    user: ${FIXUID:-1000}:${FIXGID:-1000}
+    environment:
+      - PUID=${FIXUID:-1000}
+      - PGID=${FIXGID:-1000}
     restart: unless-stopped
     container_name: monerod
     volumes:
