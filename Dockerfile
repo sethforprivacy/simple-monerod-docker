@@ -25,6 +25,7 @@ RUN set -ex && apk add --update --no-cache \
     boost-system \
     boost-thread \
     bison \
+    ccache \
     ca-certificates \
     cmake \
     eudev-dev \
@@ -54,7 +55,7 @@ ARG NPROC
 ARG TARGETARCH
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC'
-
+ENV CCACHE_DIR=/ccache
 # Build expat, a dependency for libunbound
 # renovate: datasource=github-release-attachments depName=libexpat/libexpat versioning=semver-coerced
 ARG EXPAT_VERSION=R_2_6_4
@@ -87,7 +88,7 @@ RUN set -ex && wget "https://github.com/NLnetLabs/unbound/archive/refs/tags/${LI
 WORKDIR /monero
 
 # Git pull Monero source at specified tag/branch and compile statically-linked monerod binary
-RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
+RUN --mount=type=cache,target=/ccache set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
     --depth 1 --shallow-submodules \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
@@ -97,8 +98,9 @@ RUN set -ex && git clone --recursive --branch ${MONERO_BRANCH} \
         *) echo "Dockerfile does not support this platform"; exit 1 ;; \
     esac \
     && mkdir -p build/release && cd build/release \
-    && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} -D STACK_TRACE=OFF ../.. \
-    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon
+    && cmake -D ARCH=${CMAKE_ARCH} -D STATIC=ON -D BUILD_64=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_TAG=${CMAKE_BUILD_TAG} -D STACK_TRACE=OFF -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache ../.. \
+    && cd /monero && nice -n 19 ionice -c2 -n7 make -j${NPROC:-$(nproc)} -C build/release daemon \
+    && ccache -s
 
 # Strip debug symbols from the shipped binary (STACK_TRACE=OFF, so none needed)
 RUN set -ex && strip --strip-unneeded /monero/build/release/bin/monerod
