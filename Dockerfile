@@ -3,7 +3,7 @@ ARG MONERO_BRANCH=v0.18.5.1
 ARG MONERO_COMMIT_HASH=4f92268d7c16741cfb41e5bbe2aa46cc260a9ea5
 
 # Select Alpine 3 for the build image base
-FROM alpine:3.24.1 AS build
+FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS build
 LABEL author="seth@sethforprivacy.com" \
       maintainer="seth@sethforprivacy.com"
 
@@ -121,7 +121,7 @@ RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
 
 # Begin final image build
 # Select Alpine 3 for the base image
-FROM alpine:3.24.1 AS final
+FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS final
 
 # Upgrade base image
 RUN set -ex && apk --update --no-cache upgrade
@@ -144,6 +144,11 @@ RUN set -ex && adduser -Ds /bin/ash monero \
     && chown -R monero:monero /home/monero/.bitmonero
 
 # Copy and enable entrypoint script
+# PID 1 stays root by design: the entrypoint must be able to re-own the
+# (possibly host-mounted) data directory for the requested PUID/PGID before
+# dropping privileges to the daemon via su-exec. A USER directive would break
+# that override without shipping a setuid helper (fixuid was deliberately
+# removed), so root-as-PID-1 is retained and documented in the README instead.
 COPY --chmod=0755 entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
 
