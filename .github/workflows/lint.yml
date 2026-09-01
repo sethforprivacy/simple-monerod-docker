@@ -34,7 +34,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run shellcheck
-        run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:v0.10.0 /mnt/entrypoint.sh /mnt/healthcheck.sh
+        run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:v0.10.0@sha256:2097951f02e735b613f4a34de20c40f937a6c8f18ecb170612c88c34517221fb /mnt/entrypoint.sh /mnt/healthcheck.sh
 
   hadolint:
     name: "hadolint"
@@ -47,7 +47,7 @@ jobs:
           persist-credentials: false
       # Only errors fail; warnings/infos (DL3003, DL3018, DL4006, ...) stay visible but non-blocking
       - name: Run hadolint
-        run: docker run --rm -i hadolint/hadolint:v2.12.0 hadolint --failure-threshold error - < Dockerfile
+        run: docker run --rm -i hadolint/hadolint:v2.12.0@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e hadolint --failure-threshold error - < Dockerfile
 
   actionlint:
     name: "actionlint"
@@ -59,4 +59,4 @@ jobs:
         with:
           persist-credentials: false
       - name: Run actionlint
-        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9
