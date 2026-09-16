@@ -10,14 +10,23 @@
   ],
   "packageRules": [
     {
-      "description": "Auto-merge low-risk GitHub Actions and base-image updates once checks pass",
-      "matchManagers": ["github-actions", "docker"],
-      "matchUpdateTypes": ["digest", "pinDigest", "patch", "minor"],
-      "automerge": true
+      "description": "Batch and auto-merge low-risk GitHub Actions and Docker updates once checks pass",
+      "matchManagers": [
+        "github-actions",
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "digest",
+        "pinDigest",
+        "patch",
+        "minor",
+        "pin"
+      ],
+      "automerge": true,
+      "groupName": "low-risk dependency updates"
     }
   ],
   "customManagers": [
-
     {
       "customType": "regex",
       "managerFilePatterns": [
@@ -29,5 +38,6 @@
       ],
       "versioningTemplate": "{{#if versioning}}{{versioning}}{{/if}}"
     }
-  ]
+  ],
+  "automergeType": "pr"
 }
