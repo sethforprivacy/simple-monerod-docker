@@ -13,6 +13,7 @@ on:
     - 'Dockerfile'
     - 'entrypoint.sh'
     - 'healthcheck.sh'
+    - '.github/**'
   workflow_dispatch:
 
 # Least-privilege default token (this workflow only reads the repo and pulls cache)
