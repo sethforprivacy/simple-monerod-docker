@@ -13,7 +13,7 @@
       "description": "Batch and auto-merge low-risk GitHub Actions and Docker updates once checks pass",
       "matchManagers": [
         "github-actions",
-        "docker"
+        "dockerfile"
       ],
       "matchUpdateTypes": [
         "digest",
