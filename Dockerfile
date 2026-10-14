@@ -84,6 +84,12 @@ RUN set -ex && wget "https://github.com/NLnetLabs/unbound/archive/refs/tags/${LI
     make -j${NPROC:-$(nproc)} && \
     make -j${NPROC:-$(nproc)} install
 
+# Backport of monero-project/monero#11399 + #11328 (RPC write timeouts), the
+# closed release-v0.18 versions of #11398 + #11329 on master. v0.18 cuts off
+# any RPC reply that is not fully sent within 10 s of accepting a connection,
+# truncating get_blocks.bin for slow wallets. Branch-only; never merge to main.
+COPY patches/rpc-timeouts-11399-11328.patch /patches/rpc-timeouts.patch
+
 # Switch to Monero source directory
 WORKDIR /monero
 
@@ -92,6 +98,7 @@ RUN --mount=type=cache,target=/ccache set -ex && git clone --recursive --branch 
     --depth 1 --shallow-submodules \
     https://github.com/monero-project/monero . \
     && test `git rev-parse HEAD` = ${MONERO_COMMIT_HASH} || exit 1 \
+    && git apply --verbose /patches/rpc-timeouts.patch \
     && case ${TARGETARCH:-amd64} in \
         "arm64") CMAKE_ARCH="armv8-a"; CMAKE_BUILD_TAG="linux-armv8" ;; \
         "amd64") CMAKE_ARCH="x86-64"; CMAKE_BUILD_TAG="linux-x64" ;; \

@@ -1,0 +1,200 @@
+diff --git a/contrib/epee/include/net/abstract_tcp_server2.h b/contrib/epee/include/net/abstract_tcp_server2.h
+index 7fcd866..bfbe6f5 100644
+--- a/contrib/epee/include/net/abstract_tcp_server2.h
++++ b/contrib/epee/include/net/abstract_tcp_server2.h
+@@ -175,6 +175,8 @@ namespace net_utils
+           std::deque<epee::byte_slice> queue;
+           std::size_t total_bytes;
+           bool wait_consume;
++          bool timeout_extended;
++          bool reply_extended;
+         } write;
+       };
+ 
+diff --git a/contrib/epee/include/net/abstract_tcp_server2.inl b/contrib/epee/include/net/abstract_tcp_server2.inl
+index acd69ce..0143959 100644
+--- a/contrib/epee/include/net/abstract_tcp_server2.inl
++++ b/contrib/epee/include/net/abstract_tcp_server2.inl
+@@ -57,11 +57,12 @@
+ #define MONERO_DEFAULT_LOG_CATEGORY "net"
+ 
+ #define AGGRESSIVE_TIMEOUT_THRESHOLD 120 // sockets
+-#define NEW_CONNECTION_TIMEOUT_LOCAL 1200000 // 2 minutes
++#define NEW_CONNECTION_TIMEOUT_LOCAL 1200000 // 20 minutes
+ #define NEW_CONNECTION_TIMEOUT_REMOTE 10000 // 10 seconds
+ #define DEFAULT_TIMEOUT_MS_LOCAL 1800000 // 30 minutes
+ #define DEFAULT_TIMEOUT_MS_REMOTE 300000 // 5 minutes
+ #define TIMEOUT_EXTRA_MS_PER_BYTE 0.2
++#define RPC_TIMEOUT_LAG_MS 1000 // 1 second
+ 
+ 
+ namespace epee
+@@ -75,6 +76,21 @@ namespace net_utils
+     return *ptr;
+   }
+ 
++  namespace detail
++  {
++    inline unsigned get_per_ip_timeout_shift(const connection_basic_shared_state&, const network_address&, unsigned shift)
++    {
++      return shift;
++    }
++
++    template<typename T>
++    auto get_per_ip_timeout_shift(T& state, const network_address& address, unsigned shift)
++      -> decltype(state.get_timeout_shift(address, shift))
++    {
++      return state.get_timeout_shift(address, shift);
++    }
++  } // namespace detail
++
+   /************************************************************************/
+   /*                                                                      */
+   /************************************************************************/
+@@ -105,10 +121,13 @@ namespace net_utils
+       std::min(std::max(count, 1u) - 1, 8u) :
+       0
+     );
++    const unsigned scaled_shift = detail::get_per_ip_timeout_shift(
++      static_cast<shared_state&>(connection_basic::get_state()), m_conn_context.m_remote_address, shift
++    );
+     return (
+       m_local ?
+-      std::chrono::milliseconds(DEFAULT_TIMEOUT_MS_LOCAL >> shift) :
+-      std::chrono::milliseconds(DEFAULT_TIMEOUT_MS_REMOTE >> shift)
++      std::chrono::milliseconds(DEFAULT_TIMEOUT_MS_LOCAL >> scaled_shift) :
++      std::chrono::milliseconds(DEFAULT_TIMEOUT_MS_REMOTE >> scaled_shift)
+     );
+   }
+ 
+@@ -186,8 +205,22 @@ namespace net_utils
+         else if (m_state.status == status_t::TERMINATING)
+           on_terminating();
+       }
+-      else if (m_state.status == status_t::RUNNING)
+-        interrupt();
++      else if (m_state.status == status_t::RUNNING) {
++        // Timing out cannot stop a handler. A pending write gets one renewal for
++        // an active handler or a delayed callback until a write completes.
++        const bool pending = !m_state.data.write.queue.empty();
++        if (m_connection_type == e_connection_type_RPC && (!pending ? m_state.socket.handle_read :
++            !m_state.data.write.timeout_extended && (m_state.socket.handle_read ||
++              std::chrono::steady_clock::now() - m_timers.general.expiry() >
++                std::chrono::milliseconds{RPC_TIMEOUT_LAG_MS}))) {
++          m_state.data.write.timeout_extended = pending;
++          start_timer(std::chrono::milliseconds(
++            m_local ? NEW_CONNECTION_TIMEOUT_LOCAL : NEW_CONNECTION_TIMEOUT_REMOTE
++          ) + get_timeout_from_bytes_read(m_state.data.write.total_bytes));
++        }
++        else
++          interrupt();
++      }
+       else if (m_state.status == status_t::INTERRUPTED)
+         terminate();
+     };
+@@ -382,7 +415,11 @@ namespace net_utils
+           connection_basic::logger_handle_net_read(bytes_transferred);
+           m_conn_context.m_last_recv = time(NULL);
+           m_conn_context.m_recv_cnt += bytes_transferred;
+-          start_timer(get_timeout_from_bytes_read(bytes_transferred), true);
++          // Preserve RPC write deadlines overdue by a worker delay so reads cannot hide it.
++          if (m_connection_type != e_connection_type_RPC || m_state.data.write.queue.empty() ||
++              m_timers.general.expiry() + std::chrono::milliseconds{RPC_TIMEOUT_LAG_MS} >
++                std::chrono::steady_clock::now())
++            start_timer(get_timeout_from_bytes_read(bytes_transferred), true);
+         }
+         handle_read(bytes_transferred);
+       }
+@@ -559,7 +596,9 @@ namespace net_utils
+           m_conn_context.m_last_send = time(NULL);
+           m_conn_context.m_send_cnt += bytes_transferred;
+ 
+-          start_timer(get_default_timeout(), true);
++          m_state.data.write.timeout_extended = false;
++          m_state.data.write.reply_extended = false;
++          start_timer(get_default_timeout(), m_connection_type != e_connection_type_RPC);
+         }
+         const std::size_t byte_count = m_state.data.write.queue.back().size();
+         assert(bytes_transferred == byte_count);
+@@ -904,8 +943,19 @@ namespace net_utils
+       if (!wait_consume())
+         return false;
+       const std::size_t byte_count = message.size();
++      const bool pending = !m_state.data.write.queue.empty();
+       m_state.data.write.queue.emplace_front(std::move(message));
+       m_state.data.write.total_bytes += byte_count;
++      if (m_connection_type == e_connection_type_RPC && !(pending && m_state.data.write.reply_extended)) {
++        // A slow handler can leave an overdue timer when all workers are busy.
++        // Replies queued behind a pending write get one grant until a write completes.
++        m_state.data.write.reply_extended = pending;
++        const duration_t base = std::chrono::milliseconds(
++          m_local ? NEW_CONNECTION_TIMEOUT_LOCAL : NEW_CONNECTION_TIMEOUT_REMOTE
++        );
++        const duration_t left = m_timers.general.expiry() - std::chrono::steady_clock::now();
++        start_timer(std::max(left, duration_t{}) + base + get_timeout_from_bytes_read(m_state.data.write.total_bytes));
++      }
+       start_write();
+     }
+     else {
+@@ -1023,6 +1073,9 @@ namespace net_utils
+     guard.lock();
+     m_state.protocol.wait_init = false;
+     m_state.protocol.initialized = true;
++    // Account for this connection in the RPC limits without extending its timer.
++    if (m_state.status == status_t::RUNNING && m_connection_type == e_connection_type_RPC)
++      start_timer(duration_t{}, true);
+     if (m_state.status == status_t::INTERRUPTED)
+       on_interrupted();
+     else if (m_state.status == status_t::TERMINATING)
+diff --git a/contrib/epee/include/net/http_protocol_handler.h b/contrib/epee/include/net/http_protocol_handler.h
+index 8f1ddd1..887be6f 100644
+--- a/contrib/epee/include/net/http_protocol_handler.h
++++ b/contrib/epee/include/net/http_protocol_handler.h
+@@ -64,6 +64,8 @@ namespace net_utils
+ 			std::size_t m_max_private_ip_connections{25};
+ 			std::size_t m_max_connections{100};
+ 			critical_section m_lock;
++
++			unsigned get_timeout_shift(const net_utils::network_address& address, unsigned shift);
+ 		};
+ 
+ 		// RPC limits groupable IPv6 clients by /64 to avoid per-address limit bypasses.
+diff --git a/contrib/epee/src/http_protocol_handler.cpp b/contrib/epee/src/http_protocol_handler.cpp
+index 1fd3c3c..a9f5b3d 100644
+--- a/contrib/epee/src/http_protocol_handler.cpp
++++ b/contrib/epee/src/http_protocol_handler.cpp
+@@ -28,6 +28,9 @@
+ 
+ #include "net/http_protocol_handler.h"
+ 
++#include <algorithm>
++#include <cstdint>
++
+ namespace epee { namespace net_utils { namespace http
+ {
+ 	std::string get_rpc_connection_limit_key(const net_utils::network_address& address)
+@@ -41,4 +44,24 @@ namespace epee { namespace net_utils { namespace http
+ 
+ 		return address.host_str();
+ 	}
++
++	unsigned http_server_config::get_timeout_shift(const net_utils::network_address& address, unsigned shift)
++	{
++		if (!shift)
++			return 0;
++
++		CRITICAL_REGION_LOCAL(m_lock);
++		if (m_connection_count >= m_max_connections)
++			return shift;
++
++		const bool local = address.is_loopback() || address.is_local();
++		const std::size_t limit = local ? m_max_private_ip_connections : m_max_public_ip_connections;
++		const auto elem = m_connections.find(get_rpc_connection_limit_key(address));
++		const std::uint64_t host_shift =
++			(limit && elem != m_connections.end()) ? (std::uint64_t(elem->second) * 8) / limit : 0;
++
++		// Limit timeout relief as this server fills so idle connections release slots.
++		const std::uint64_t total_shift = (std::uint64_t(m_connection_count) * 8) / m_max_connections;
++		return static_cast<unsigned>(std::min<std::uint64_t>(shift, std::max(host_shift, total_shift)));
++	}
+ }}}
