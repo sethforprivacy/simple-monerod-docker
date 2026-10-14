@@ -22,6 +22,9 @@ concurrency:
 
 env:
   GHCR_REPO: ghcr.io/${{ github.repository_owner }}/simple-monerod
+  # Patched branch: suffix every published tag so a dispatch from here can
+  # never overwrite the plain release tag (or `latest`) that users pull.
+  TAG_SUFFIX: -rpc-timeouts
 
 jobs:
   build:
@@ -104,7 +107,7 @@ jobs:
           cache-from: |
             type=registry,ref=${{ env.GHCR_REPO }}:buildcache-${{ env.DIGEST_NAME }}
             type=registry,ref=${{ env.GHCR_REPO }}:latest
-          cache-to: type=registry,ref=${{ env.GHCR_REPO }}:buildcache-${{ env.DIGEST_NAME }},mode=max
+          cache-to: type=registry,ref=${{ env.GHCR_REPO }}:buildcache-${{ env.DIGEST_NAME }}${{ env.TAG_SUFFIX }},mode=max
 
       # Fail the release on critical/high vulnerabilities that already have fixes
       - name: Scan pushed image for vulnerabilities
@@ -189,7 +192,7 @@ jobs:
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ env.MONERO_TAG }}
+            type=raw,value=${{ env.MONERO_TAG }}${{ env.TAG_SUFFIX }}
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
