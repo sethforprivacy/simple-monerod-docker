@@ -1,4 +1,4 @@
-# renovate: datasource=github-releases depName=monero-project/monero
+# renovate: datasource=github-releases depName=monero-project/monero versioning=loose
 ARG MONERO_BRANCH=v0.18.5.4
 ARG MONERO_COMMIT_HASH=85f036ba7019cd36f08e8a38a27c37ea7b522618
 

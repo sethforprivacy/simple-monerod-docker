@@ -24,6 +24,13 @@
       ],
       "automerge": true,
       "groupName": "low-risk dependency updates"
+    },
+    {
+      "description": "Monero releases always get their own PR, reviewed by hand",
+      "matchDepNames": [
+        "monero-project/monero"
+      ],
+      "automerge": false
     }
   ],
   "customManagers": [
