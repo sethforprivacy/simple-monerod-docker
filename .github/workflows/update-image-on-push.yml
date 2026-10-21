@@ -9,6 +9,11 @@ on:
     - 'entrypoint.sh'
     - 'healthcheck.sh'
   workflow_dispatch:
+    inputs:
+      no_cache:
+        description: "Rebuild every layer without the registry build cache (e.g. to pick up updated apk packages)"
+        type: boolean
+        default: false
 
 # Least-privilege default; jobs that push opt into packages: write below
 permissions:
@@ -105,6 +110,9 @@ jobs:
             type=registry,ref=${{ env.GHCR_REPO }}:buildcache-${{ env.DIGEST_NAME }}
             type=registry,ref=${{ env.GHCR_REPO }}:latest
           cache-to: type=registry,ref=${{ env.GHCR_REPO }}:buildcache-${{ env.DIGEST_NAME }},mode=max
+          # Unchanged RUN lines are otherwise served from buildcache, so a manual
+          # rebuild would not pick up newer packages from the package repos.
+          no-cache: ${{ inputs.no_cache == true }}
 
       # Fail the release on critical/high vulnerabilities that already have fixes
       - name: Scan pushed image for vulnerabilities
