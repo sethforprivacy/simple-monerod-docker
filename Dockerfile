@@ -106,6 +106,13 @@ RUN --mount=type=cache,target=/ccache set -ex && git clone --recursive --branch 
 RUN set -ex && strip --strip-unneeded /monero/build/release/bin/monerod
 
 # git pull and validate ban list
+# gpg --verify accepts a signature from any imported key, so each signature is
+# also matched to its signer's pinned primary key fingerprint; a swapped key
+# file (e.g. rucknium.me served over an intercepted connection) cannot vouch
+# for the list
+ARG BOOG900_FINGERPRINT=37AA6F0F4776A897EEA44E5CAD8B0A2CF7599219
+ARG RUCKNIUM_FINGERPRINT=5D5E08A2389DF225ABD0781B291E0C229D631697
+ARG JEFFRO256_FINGERPRINT=2EAAC930E6B90CB019C01E806F79797A6E392442
 RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
     && cd monero-ban-list \
     && wget https://raw.githubusercontent.com/Cuprate/cuprate/7b8756fa80e386fb04173d8220c15c86bf9f9888/misc/gpg_keys/boog900.asc \
@@ -115,9 +122,12 @@ RUN set -ex && git clone https://github.com/Boog900/monero-ban-list \
     && gpg --import boog900.asc \
     && gpg --import rucknium.asc \
     && gpg --import jeffro256.asc \
-    && gpg --verify --status-fd 1 ./sigs/boog900.sig ban_list.txt 2>/dev/null \
-    && gpg --verify --status-fd 1 ./sigs/Rucknium.sig ban_list.txt 2>/dev/null \
-    && gpg --verify --status-fd 1 ./sigs/jeffro256.sig ban_list.txt 2>/dev/null
+    && gpg --status-file boog900.status --verify ./sigs/boog900.sig ban_list.txt 2>/dev/null \
+    && grep -E "^\[GNUPG:\] VALIDSIG .* ${BOOG900_FINGERPRINT}\$" boog900.status \
+    && gpg --status-file rucknium.status --verify ./sigs/Rucknium.sig ban_list.txt 2>/dev/null \
+    && grep -E "^\[GNUPG:\] VALIDSIG .* ${RUCKNIUM_FINGERPRINT}\$" rucknium.status \
+    && gpg --status-file jeffro256.status --verify ./sigs/jeffro256.sig ban_list.txt 2>/dev/null \
+    && grep -E "^\[GNUPG:\] VALIDSIG .* ${JEFFRO256_FINGERPRINT}\$" jeffro256.status
 
 # Begin final image build
 # Select Alpine 3 for the base image
